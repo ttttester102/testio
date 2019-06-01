@@ -35,5 +35,8 @@ module.exports = {
     CHANGE: "change",
     TYPES: ["string", "array", "object", "number", "any"],
     ERROR_TYPE_MISMATCHED: "type_mismatched",
-    ERROR_FIELDS_EMPTY: "error_fields_empty"
+    ERROR_FIELDS_EMPTY: "error_fields_empty",
+
+
+    APP_KEY: "f4d1ca1098a0057311bc5fc33ef27a1e"
 } 

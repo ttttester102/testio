@@ -1,4 +1,6 @@
 var crypto = require('crypto');
+var md5 = require('md5');
+var moment = require('moment');
 var apiKeys = require('./config');
 var {
     NOT_VALID,
@@ -36,7 +38,8 @@ var {
     CHANGE,
     TYPES,
     ERROR_FIELDS_EMPTY,
-    ERROR_TYPE_MISMATCHED
+    ERROR_TYPE_MISMATCHED,
+    APP_KEY
 } = require('./constant');
 
 var isObjectEmpty = function (obj, cb = undefined) {
@@ -470,6 +473,12 @@ var isTypeMatched = function (ele, value) {
     }
 }
 
+/**
+ * Get authorization token
+ */
+var getAuthoriztionToken = () => {
+    return md5(`${APP_KEY}${md5(moment(new Date()).format('DD-MM-YYYY'))}`);
+}
 
 /**
  * Validate the request 
@@ -484,7 +493,6 @@ var validate = function (key, obj, cb) {
                     emptyKeys: []
                 }
                 var misMatchedValues = apiKeys.routesFields[key].filter(ele => TYPES.findIndex(type => {
-                    console.log(`isTypeMatched ====> ${ele.type}`, isTypeMatched(ele, obj[ele.key]))
                     return ele.type.toLowerCase() === type.toLowerCase() && isTypeMatched(ele, obj[ele.key]);
                 }) === -1);
 
@@ -499,14 +507,11 @@ var validate = function (key, obj, cb) {
                     return;
                 }
                 apiKeys.routesFields[key].forEach((element, index) => {
-                    console.log("Math.abs ===> ", Math.abs(obj[element.key]), obj[element.key]);
-
                     switch (element.type.toLowerCase()) {
                         case "string":
                             !obj[element.key] && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });
                             break;
                         case "number":
-                            console.log("Math.abs ===> ", Math.abs(obj[element.key]), obj[element.key]);
                             (!Math.abs(obj[element.key]) && obj[element.key] !== 0) && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });
                             break;
                         case "array":
@@ -553,5 +558,6 @@ module.exports = {
     socketResponse,
     close,
     validate,
-    mergeObject
+    mergeObject,
+    getAuthoriztionToken
 }

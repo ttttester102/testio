@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 
 var common = require("../operations/common");
-var { SUCCESS } = require("../operations/constant");
+var { SUCCESS, VALIDATE_ERROR } = require("../operations/constant");
+var { signup } = require("../operations/operation");
 
 /**
  * Login
@@ -16,6 +17,16 @@ router.post("/login", function(req, res){
             status,
             keys
         });
+    });
+});
+
+/**
+ * Signup
+ */
+router.post("/signup", function(req, res){
+    common.validate("signup", req.body,(status, keys)=>{
+        if(status) signup(req.body, (status, response) => common.httpResponse(req, res, status, response));
+        else common.httpResponse(req, res, VALIDATE_ERROR, keys);
     });
 });
 

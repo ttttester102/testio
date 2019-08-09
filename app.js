@@ -8,6 +8,9 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var apis = require("./routes/user");
 
+/** Csv to json file */
+var csv_to_json_apis = require('./routes/csvtojson/action');
+
 var common = require("./operations/common");
 var { ERROR } = require("./operations/constant");
 
@@ -42,6 +45,7 @@ app.use('/users', (req, res, next) => {
   });
 }, usersRouter);
 app.use('/api', apis);
+app.use('/csv/to/json', csv_to_json_apis);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

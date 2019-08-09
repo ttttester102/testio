@@ -455,13 +455,16 @@ var mergeObject = function (obj, oldObj) {
  */
 var isTypeMatched = function (ele, value) {
     if (!ele || (ele && !ele.type)) return false;
+    if (!ele.isRequired && !value && value !== 0 && typeof value !== undefined && value !== null) return true;
     if (!value && value !== 0 && typeof value !== undefined && value !== null) return false;
 
     switch (ele.type.toLowerCase()) {
         case "string":
             return (typeof value === "string" || value === undefined || value === null) ? true : false;
         case "number":
-            return (typeof value === "number" || value === undefined || value === null) ? true : false
+            return (typeof value === "number" || value === undefined || value === null) ? true : false;
+        case "boolean":
+            return (typeof value === "boolean" || value === undefined || value === null) ? true : false;
         case "object":
             return (typeof value === "object" && !Array.isArray(value) || value === undefined || value === null) ? true : false;
         case "array":
@@ -513,6 +516,9 @@ var validate = function (key, obj, cb) {
                             break;
                         case "number":
                             (!Math.abs(obj[element.key]) && obj[element.key] !== 0) && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });
+                            break;
+                        case "boolean":
+                            !obj[element.key] && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });
                             break;
                         case "array":
                             (!obj[element.key] || obj[element.key] && !obj[element.key].length) && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });

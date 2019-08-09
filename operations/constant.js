@@ -33,10 +33,16 @@ module.exports = {
 
     NO_CHANGE: 'noChange',
     CHANGE: "change",
-    TYPES: ["string", "array", "object", "number", "any"],
+    TYPES: ["string", "array", "object", "number", "boolean", "any"],
     ERROR_TYPE_MISMATCHED: "type_mismatched",
     ERROR_FIELDS_EMPTY: "error_fields_empty",
 
 
-    APP_KEY: "f4d1ca1098a0057311bc5fc33ef27a1e"
+    APP_KEY: "f4d1ca1098a0057311bc5fc33ef27a1e",
+
+    AUTH_USER_DATA: "auth_user_data",
+    USERS_CSV_JSON_DATA: "users_csv_json_data",
+
+    ACCEPCT_CONTACT_RESPONSE: 1,
+    DECLINE_CONTACT_RESPONSE: 2
 } 

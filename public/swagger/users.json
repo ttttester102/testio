@@ -1,0 +1,1420 @@
+{
+    "openapi": "3.0.0",
+    "servers": [
+        {
+            "description": "Production Backend",
+            "url": "http://localhost:5000/v0/users"
+        },
+        {
+            "description": "Local Development Backend",
+            "url": "http://localhost:5000"
+        }
+    ],
+    "info": {
+        "version": "0.0.1-oas3",
+        "title": "TestIO",
+        "description": "# Handle the user\n CRUD APIS in TestIO."
+    },
+    "security": [
+        {
+            "application": [
+                "read",
+                "write"
+            ]
+        },
+        {
+            "ApiKeyAuth": []
+        }
+    ],
+    "paths": {
+        "/ping": {
+            "get": {
+                "summary": "Server heartbeat operation",
+                "description": "This operation shows current *status* of server.<br/> If `200` then all ok, if `500` a problem is there.<br/> __Dev Oriented Endpoint__",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Ok"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "tags": [
+                    "System"
+                ]
+            }
+        },
+        "/login": {
+            "summary": "Get jwt token with your username and password",
+            "description": "Send me your credentials, I'll tell you if you can enter",
+            "post": {
+                "operationId": "postAuthLogin",
+                "summary": "Validate your user credentials to enter CookinAt' app",
+                "description": "Given email and password, create and return jwt token and DB id",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/Login"
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Ok"
+                    },
+                    "401": {
+                        "description": "Email or password is wrong",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UnAuthorized"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BadRequest"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        },
+        "/v0/users/login/{email}/forgot": {
+            "summary": "The user forgot the password",
+            "description": "the user don't have to provide nothing more than the email",
+            "get": {
+                "summary": "Send a Change password request",
+                "description": "The user must be capable of change the password by request. An One time Password (OTP) is sent to her/his email",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/Email"
+                    }
+                ],
+                "operationId": "getAuthLoginForgot",
+                "security": [],
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/Info"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        },
+        "/v0/users/login/recovery": {
+            "summary": "The user enter the new the password",
+            "description": "the user don't have to provide nothing more than the email",
+            "post": {
+                "deprecated": true,
+                "summary": "Change password with verificationCode",
+                "description": "The user must be capable of change the password by request",
+                "operationId": "postAuthLoginRecovery",
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/Recovery"
+                },
+                "security": [],
+                "responses": {
+                    "201": {
+                        "$ref": "#/components/responses/Ok"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        },
+        "/v0/usres/signup": {
+            "summary": "Create user in database of Users",
+            "description": "If you want access come here first",
+            "post": {
+                "operationId": "postAuthSignup",
+                "summary": "Get access to CookinAt' App creating a User",
+                "description": "In the App you give name, email and password.\nWe store that data, encrypt your password and\nsent you a verification code to your email.\nThen you must visit the next view, Verification, \nand enter the code provided in the email.\nOnly then you can enter the App in LogIn view.\nIf verification step not done the user is not allowed to operate.",
+                "security": [],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/Signup"
+                },
+                "responses": {
+                    "201": {
+                        "$ref": "#/components/responses/SignUp201"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Email409"
+                    },
+                    "422": {
+                        "description": "Errors in Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ClientError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        },
+        "/v0/users/signup/verification/resend/{email}": {
+            "summary": "The user can resend the verification code he got in email",
+            "description": "the user don't have to provide nothing more than the email",
+            "get": {
+                "summary": "Verificate your email",
+                "description": "The user must be capable of change the password by request\nAn verification code is sent to your email, that code is\nrequested here.\n\nThe verification code will be a unique 6 alphanumeric",
+                "operationId": "getAuthSignUpVerificationResend",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/Email"
+                    }
+                ],
+                "security": [],
+                "responses": {
+                    "201": {
+                        "$ref": "#/components/responses/Ok"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "System",
+            "description": "Non business logic"
+        },
+        {
+            "name": "App Authorization",
+            "description": "Login and Signup"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "ApiKeyAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "authorization"
+            }
+        },
+        "schemas": {
+            "Login": {
+                "type": "object",
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "description": "Complete username without spaces",
+                        "example": "test"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "password with more than 6",
+                        "example": "password123"
+                    }
+                }
+            },
+            "Signup": {
+                "type": "object",
+                "required": [
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "password",
+                    "telephone"
+                ],
+                "properties": {
+                    "firstName": {
+                        "type": "string",
+                        "description": "Names with more than 3 letters",
+                        "example": "John",
+                        "minLength": 3
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Surnames with more than 3 letters",
+                        "example": "Doe",
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces and more than 3 letters",
+                        "example": "example@mail.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "password with more than 8 and less than 24 alphanumeric symbols",
+                        "example": "password123",
+                        "minLength": 6,
+                        "maxLength": 24
+                    },
+                    "telephone": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SignupCook": {
+                "type": "object",
+                "required": [
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "password",
+                    "telephone",
+                    "role"
+                ],
+                "properties": {
+                    "firstName": {
+                        "type": "string",
+                        "description": "Names with more than 3 letters",
+                        "example": "John",
+                        "minLength": 3
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Surnames with more than 3 letters",
+                        "example": "Doe",
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces and more than 3 letters",
+                        "example": "example@mail.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "password with more than 8 and less than 24 alphanumeric symbols",
+                        "example": "password123",
+                        "minLength": 6,
+                        "maxLength": 24
+                    },
+                    "telephone": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "last4SSN": {
+                        "type": "string"
+                    },
+                    "certificationPhoto": {
+                        "type": "string"
+                    },
+                    "instagram": {
+                        "type": "string"
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "required": [
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "password",
+                    "telephone"
+                ],
+                "properties": {
+                    "nickname": {
+                        "type": "string",
+                        "description": "A short name to be called if preferred",
+                        "example": "Jhonny"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "Names with more than 3 letters",
+                        "example": "John",
+                        "minLength": 3
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Surnames with more than 3 letters",
+                        "example": "Doe",
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces and more than 3 letters",
+                        "example": "example@mail.com"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "password with more than 6 and less than 24 alphanumeric symbols",
+                        "example": "password123",
+                        "minLength": 6,
+                        "maxLength": 24
+                    },
+                    "telephone": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "last4SSN": {
+                        "type": "string",
+                        "minLength": 9,
+                        "maxLength": 9
+                    },
+                    "bio": {
+                        "type": "string",
+                        "description": "The cook describe her/him self following provided guidelines",
+                        "maxLength": 1200
+                    },
+                    "video": {
+                        "type": "string",
+                        "description": "A video of the cook previously  uploaded on Youtube or Vimeo"
+                    },
+                    "cookingSchedule": {
+                        "type": "string",
+                        "description": "Schedule in table format. A csv semicolon row separated in string for easy conversion"
+                    },
+                    "notifications": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "noSugestions",
+                            "important",
+                            "none"
+                        ],
+                        "example": "all"
+                    },
+                    "lastPayOffMethod": {
+                        "type": "string"
+                    },
+                    "lastPaymentMethod": {
+                        "type": "string"
+                    }
+                },
+                "xml": {
+                    "name": "User"
+                }
+            },
+            "Setting": {
+                "type": "object",
+                "required": [
+                    "userId",
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "telephone"
+                ],
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "Names with more than 3 letters",
+                        "example": "John",
+                        "minLength": 3
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Surnames with more than 3 letters",
+                        "example": "Doe",
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces and more than 3 letters",
+                        "example": "example@mail.com"
+                    },
+                    "telephone": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "notifications": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "noSugestions",
+                            "important",
+                            "none"
+                        ],
+                        "example": "all"
+                    },
+                    "lastPaymentMethod": {
+                        "type": "string",
+                        "description": "where to charge the money you own to CookinAt"
+                    }
+                }
+            },
+            "SettingCook": {
+                "type": "object",
+                "required": [
+                    "userId",
+                    "firstName",
+                    "lastName",
+                    "email",
+                    "telephone"
+                ],
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "firstName": {
+                        "type": "string",
+                        "description": "Names with more than 3 letters",
+                        "example": "John",
+                        "minLength": 3
+                    },
+                    "lastName": {
+                        "type": "string",
+                        "description": "Surnames with more than 3 letters",
+                        "example": "Doe",
+                        "minLength": 3
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces and more than 3 letters",
+                        "example": "example@mail.com"
+                    },
+                    "telephone": {
+                        "type": "string"
+                    },
+                    "avatar": {
+                        "type": "string"
+                    },
+                    "last4SSN": {
+                        "type": "string",
+                        "description": "Your nine-digit number issued to U.S. citizens, permanent residents, and temporary (working) residents"
+                    },
+                    "certificationPhoto": {
+                        "type": "string",
+                        "description": "National Registry of Food Safety Professionals (NRFSP) extended certificate"
+                    },
+                    "instagram": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string",
+                        "description": "The cook describe her/him self following provided guidelines",
+                        "maxLength": 1200
+                    },
+                    "video": {
+                        "type": "string",
+                        "description": "A video of the cook previously  uploaded on YoutuBe or Vimeo"
+                    },
+                    "cookingSchedule": {
+                        "type": "string",
+                        "description": "Schedule in table format. A csv semicolon row separated in string for aesy conversion",
+                        "example": [
+                            "time",
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thrusday",
+                            "friday",
+                            "saturday",
+                            "sunday; 1600",
+                            "NA",
+                            "A",
+                            "A",
+                            "NA",
+                            "A",
+                            "A",
+                            "A"
+                        ]
+                    },
+                    "notifications": {
+                        "type": "string",
+                        "enum": [
+                            "all",
+                            "noSugestions",
+                            "important",
+                            "none"
+                        ],
+                        "example": "all"
+                    },
+                    "lastPayOffMethod": {
+                        "type": "string",
+                        "description": "where to deposit money for you"
+                    },
+                    "lastPaymentMethod": {
+                        "type": "string",
+                        "description": "where to charge the money you own to CookinAt"
+                    }
+                }
+            },
+            "Ok": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "number",
+                        "description": "Response status"
+                    },
+                    "code": {
+                        "type": "number",
+                        "description": "Response body code"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "object with valuable data"
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Explanatory message"
+                    },
+                    "emptyKeys": {
+                        "type": "array"
+                    },
+                    "error": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "status": 200,
+                    "code": 1,
+                    "data": {
+                        "_id": "5d4537d91bf2f20cbe51eb70",
+                        "username": "test2",
+                        "mobile_number": "1234567890",
+                        "deletedStatus": 0,
+                        "status": 0,
+                        "location": {
+                            "type": "Point",
+                            "coordinates": [
+                                "30.7333",
+                                "76.7794"
+                            ]
+                        },
+                        "user_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZDQ1MzdkOTFiZjJmMjBjYmU1MWViNzAiLCJ1c2VybmFtZSI6InRlc3QyIiwibW9iaWxlX251bWJlciI6IjEyMzQ1Njc4OTAiLCJkZWxldGVkU3RhdHVzIjowLCJzdGF0dXMiOjAsImxvY2F0aW9uIjp7InR5cGUiOiJQb2ludCIsImNvb3JkaW5hdGVzIjpbIjMwLjczMzMiLCI3Ni43Nzk0Il19LCJ1c2VyX3Rva2VuIjoiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5Ym1GdFpTSTZJblJsYzNReUlpd2liVzlpYVd4bFgyNTFiV0psY2lJNklqRXlNelExTmpjNE9UQWlMQ0prWld4bGRHVmtVM1JoZEhWeklqb3dMQ0p6ZEdGMGRYTWlPakFzSW14dlkyRjBhVzl1SWpwN0luUjVjR1VpT2lKUWIybHVkQ0lzSW1OdmIzSmthVzVoZEdWeklqcGJiblZzYkN4dWRXeHNYWDBzSW1saGRDSTZNVFUyTkRneE56TTJPSDAuRXc5VG1LbDBUWjVES3RoMEhmV1ptV0VNRmVpakQyLUVKZTVXajd3a09tQSIsImFib3V0X21lIjoiTG9yZW0gSXBzdW0gaXMgc2ltcGx5IGR1bW15IHRleHQgb2YgdGhlIHByaW50aW5nIGFuZCB0eXBlc2V0dGluZyBpbmR1c3RyeS4gTG9yZW0gSXBzdW0gaGFzIGJlZW4gdGhlIGluZHVzdHJ5J3Mgc3RhbmRhcmQgZHVtbXkgdGV4dCBldmVyIHNpbmNlIHRoZSAxNTAwcywgd2hlbiBhbiB1bmtub3duIHByaW50ZXIgdG9vayBhIGdhbGxleSBvZiB0eXBlIGFuZCBzY3JhbWJsZWQgaXQgdG8gbWFrZSBhIHR5cGUgc3BlY2ltZW4gYm9vay4iLCJleWVfY29sb3IiOiJibGFjayIsImhhaXJfY29sb3IiOiJibGFjayIsImlzUHJpdmF0ZSI6IkZBTFNFIiwib2NjdXBhdGlvbiI6IkRldmVsb3BlciIsInByb2ZpbGVfaW1hZ2VfdXJsIjoicHJvZmlsZV9pbWFnZV91cmwiLCJyZWxhdGlvbnNoaXBfc3RhdHVzIjoiU2luZ2xlIiwid2hhdF9oZV9pc19sb29raW5nX2ZvciI6IkxvcmVtIElwc3VtIGlzIHNpbXBseSBkdW1teSB0ZXh0IG9mIHRoZSBwcmludGluZyBhbmQgdHlwZXNldHRpbmcgaW5kdXN0cnkuIiwiaWF0IjoxNTY1NjkzMjQ0fQ.vO-nrd9IkZb5d1y_c_0mDQc1WoNQDETI1vM_NGwz_Uk",
+                        "about_me": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+                        "eye_color": "black",
+                        "hair_color": "black",
+                        "isPrivate": "FALSE",
+                        "occupation": "Developer",
+                        "profile_image_url": "profile_image_url",
+                        "relationship_status": "Single",
+                        "what_he_is_looking_for": "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+                    },
+                    "message": "Success",
+                    "emptyKeys": null,
+                    "error": false
+                }
+            },
+            "ServerError": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "number"
+                    },
+                    "data": {
+                        "type": "array"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
+                        "type": "array"
+                    },
+                    "error": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {}
+            },
+            "ClientError": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "msg": {
+                        "type": "string"
+                    },
+                    "errors": {
+                        "description": "object with valuable data",
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "description": "Describe the error",
+                            "properties": {
+                                "msg": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "example": {
+                    "sucess": false,
+                    "msg": "Client Sent Incorrect or Incomplete Data",
+                    "errors": [
+                        {
+                            "msg": "error1"
+                        },
+                        {
+                            "msg": "error2"
+                        },
+                        "...otherErrors"
+                    ]
+                }
+            },
+            "Login200": {
+                "type": "object",
+                "properties": {
+                    "sucess": {
+                        "type": "boolean"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Explanatory message"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "object with valuable data",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            },
+                            "token": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "User201": {
+                "type": "object",
+                "properties": {
+                    "sucess": {
+                        "type": "boolean"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Explanatory message"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "object with valuable data",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "email": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "Users201": {
+                "type": "object",
+                "properties": {
+                    "sucess": {
+                        "type": "boolean"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Explanatory message"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "email": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Info": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "description": "Explanatory message"
+                    },
+                    "docsUrl": {
+                        "type": "string",
+                        "description": "Where to find help"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "path": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                },
+                                "url": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Lock": {
+                "type": "object",
+                "required": [
+                    "userId",
+                    "locktype"
+                ],
+                "properties": {
+                    "locktype": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "reasons": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Verification": {
+                "type": "object",
+                "required": [
+                    "email",
+                    "verificationCode"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "verificationCode": {
+                        "description": "Code sent to email to validate Sign Up",
+                        "type": "string"
+                    }
+                }
+            },
+            "UserType": {
+                "type": "object",
+                "required": [
+                    "type",
+                    "userId"
+                ],
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "description": "Choose cook or diner",
+                        "type": "string",
+                        "enum": [
+                            "cook",
+                            "diner"
+                        ]
+                    }
+                }
+            },
+            "Recovery": {
+                "type": "object",
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UnAuthorized": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "number"
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
+                        "type": "array"
+                    },
+                    "error": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "code": 1,
+                    "status": 401,
+                    "data": {
+                        "message": "Either username or password is incorrect."
+                    },
+                    "message": "Not Authorized",
+                    "emptyKeys": null,
+                    "error": true
+                }
+            },
+            "ValidationError": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "number"
+                    },
+                    "data": {
+                        "type": "array"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
+                        "type": "object",
+                        "properties": {
+                            "error": {
+                                "type": "string"
+                            },
+                            "message": {
+                                "type": "array",
+                                "properties": {
+                                    "fieldName": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "error": "boolean"
+                },
+                "example": {
+                    "code": 1,
+                    "status": 422,
+                    "data": [],
+                    "message": "ValidationError",
+                    "emptyKeys": {
+                        "error": "type_mismatched",
+                        "message": [
+                            {
+                                "fieldName": "username",
+                                "type": "string"
+                            }
+                        ]
+                    },
+                    "error": true
+                }
+            },
+            "BadRequest": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "number"
+                    },
+                    "status": {
+                        "type": "number"
+                    },
+                    "data": {
+                        "type": "object",
+                        "properties": {
+                            "message": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
+                        "type": "array"
+                    },
+                    "error": {
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "code": 1,
+                    "status": 400,
+                    "data": {
+                        "message": "Authorization token is not found."
+                    },
+                    "message": "Bad REQUEST",
+                    "emptyKeys": null,
+                    "error": true
+                }
+            }
+        },
+        "requestBodies": {
+            "Geo": {
+                "description": "IP needed to get info",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Geo"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Geo"
+                        }
+                    }
+                }
+            },
+            "Login": {
+                "description": "User credentials needed",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Login"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Login"
+                        }
+                    }
+                }
+            },
+            "Signup": {
+                "description": "User related data needed",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Signup"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Signup"
+                        }
+                    }
+                }
+            },
+            "SignupCook": {
+                "description": "User related data needed",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SignupCook"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SignupCook"
+                        }
+                    }
+                }
+            },
+            "User": {
+                "description": "User object",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    }
+                }
+            },
+            "UserDelete": {
+                "description": "Delete User object",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    }
+                }
+            },
+            "Lock": {
+                "description": "Changes availability of user",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Lock"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Lock"
+                        }
+                    }
+                }
+            },
+            "Verification": {
+                "description": "Asks for verification code and user' email",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Verification"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Verification"
+                        }
+                    }
+                }
+            },
+            "Recovery": {
+                "description": "Asks for user' email and",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Recovery"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Recovery"
+                        }
+                    }
+                }
+            },
+            "UserType": {
+                "description": "Asks to Change User's Role",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/UserType"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/UserType"
+                        }
+                    }
+                }
+            },
+            "Setting": {
+                "description": "Asks to Change User's Settings",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Setting"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Setting"
+                        }
+                    }
+                }
+            },
+            "SettingCook": {
+                "description": "Asks to Change Cook's Settings",
+                "required": true,
+                "content": {
+                    "application/x-www-form-urlencoded": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SettingCook"
+                        }
+                    },
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/SettingCook"
+                        }
+                    }
+                }
+            }
+        },
+        "responses": {
+            "ServerError": {
+                "description": "Internal Server Error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ServerError"
+                        }
+                    }
+                }
+            },
+            "ClientError": {
+                "description": "Client Sent Incorrect or incomplete Data",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ClientError"
+                        }
+                    }
+                }
+            },
+            "UnAuthorized": {
+                "description": "Client Sent Incorrect or incomplete Data",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/UnAuthorized"
+                        }
+                    }
+                }
+            },
+            "BadRequest": {
+                "description": "Client Sent Incorrect or incomplete Data",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/BadRequest"
+                        }
+                    }
+                }
+            },
+            "ValidationError": {
+                "description": "Validation error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        }
+                    }
+                }
+            },
+            "Email409": {
+                "description": "Email already exists",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/ClientError"
+                        }
+                    }
+                }
+            },
+            "Ok": {
+                "description": "The petition returned successfuly",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Ok"
+                        }
+                    }
+                }
+            },
+            "Login200": {
+                "description": "User Log in successfully (email, token and id inside of data)",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Login200"
+                        }
+                    }
+                },
+                "links": {
+                    "getUserById": {
+                        "operationId": "getUserId",
+                        "parameters": {
+                            "userId": "$response.body#/data/id"
+                        },
+                        "description": "The `id` value returned in the response can be used as the `userId` parameter in `GET /user/{userId}`.\n"
+                    }
+                }
+            },
+            "SignUp201": {
+                "description": "User Sign Up successfully (email and name inside of data)",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User201"
+                        }
+                    }
+                },
+                "links": {
+                    "getEmail": {
+                        "operationId": "postAuthLogin",
+                        "parameters": {
+                            "userId": "$response.body#/data/email"
+                        },
+                        "description": "The `email` value returned in the response can be used as the `email` parameter in `POST /auth/login`.\n"
+                    }
+                }
+            },
+            "UserCreate201": {
+                "description": "User Created Successfuly",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/User201"
+                        }
+                    }
+                },
+                "links": {
+                    "getEmail": {
+                        "operationId": "postAuthLogin",
+                        "parameters": {
+                            "userId": "$response.body#/data/email"
+                        },
+                        "description": "The `email` value returned in the response can be used as the `email` parameter in `POST /auth/login`.\n"
+                    }
+                }
+            },
+            "Info": {
+                "description": "Info about this path",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Info"
+                        }
+                    }
+                }
+            }
+        },
+        "parameters": {
+            "JWT": {
+                "in": "header",
+                "name": "cookinat-api-jwt",
+                "description": "jwt Token given in /login step for App use",
+                "schema": {
+                    "type": "string"
+                },
+                "required": true
+            },
+            "APIKey": {
+                "in": "header",
+                "name": "cookinat-api-key",
+                "description": "API key for admin | consumer | staff | accounting",
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "UserId": {
+                "name": "userId",
+                "in": "path",
+                "description": "ID of user to return",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "UserType": {
+                "name": "userType",
+                "in": "path",
+                "description": "If user is Cook or Diner",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "enum": [
+                        "admin",
+                        "consumer",
+                        "cook",
+                        "diner",
+                        "staff",
+                        "accounting",
+                        "none"
+                    ],
+                    "example": "none"
+                }
+            },
+            "ClaimId": {
+                "name": "claimId",
+                "in": "path",
+                "description": "ID os certain Claim",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "Email": {
+                "name": "email",
+                "in": "path",
+                "description": "email to check for password recovery",
+                "required": true,
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "Authorization": {
+                "in": "header",
+                "name": "authorization",
+                "description": "Encrypted token, need to pass in request header.",
+                "schema": {
+                    "type": "string"
+                },
+                "required": true
+            }
+        }
+    }
+}

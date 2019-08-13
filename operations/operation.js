@@ -4,7 +4,8 @@ var {
     ERROR,
     NOVALUE,
     PRESENT,
-    AUTH_USER_DATA
+    AUTH_USER_DATA, 
+    NOT_AUTHORIZED
 } = require("./constant");
 var {
     ObjectID,
@@ -47,7 +48,9 @@ var login = function (obj, cb) {
                             }, cb);
                         });
                     }
-                    else close(client, NOVALUE, err, cb);
+                    else close(client, NOT_AUTHORIZED, {
+                        message: "Either username or password is incorrect."
+                    }, cb);
                 });
             });
         }

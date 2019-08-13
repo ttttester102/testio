@@ -30,11 +30,6 @@ router.post("/signup", function (req, res) {
     });
 });
 
-/* GET users listing. */
-router.get('/', function (req, res, next) {
-    res.send('respond with a resource');
-});
-
 /**
  * Get user data
  */

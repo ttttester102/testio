@@ -5,6 +5,7 @@ module.exports = {
     ERROR: 'err',
     PRESENT: 'present',
     NOVALUE: 'noValue',
+    NOT_AUTHORIZED: "notAuthorized",
     OBJECT_EMPTY: 'objEmpty',
     TOKEN_ERROR: 'tokenErr',
     VALIDATE_ERROR: 'validationErr',
@@ -31,6 +32,9 @@ module.exports = {
     LAWYER: 1,
     CLIENT: 2,
 
+    FORBIDDEN: "forbidden",
+    BAD_REQUEST: "badRequest",
+    NOT_CHANGED: "notChanged",
     NO_CHANGE: 'noChange',
     CHANGE: "change",
     TYPES: ["string", "array", "object", "number", "boolean", "any"],

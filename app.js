@@ -1,18 +1,19 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var createError = require('http-errors'),
+    express = require('express'),
+    path = require('path'),
+    cookieParser = require('cookie-parser'),
+    logger = require('morgan'),
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var apis = require("./routes/user");
+    indexRouter = require('./routes/index'),
+    usersRouter = require('./routes/users'),
+    apis = require("./routes/user"),
+    swaggerUi = require('swagger-ui-express');
 
 /** Csv to json file */
 var csv_to_json_apis = require('./routes/csvtojson/action');
 
 var common = require("./operations/common");
-var { ERROR } = require("./operations/constant");
+var { SUCCESS, BAD_REQUEST, FORBIDDEN } = require("./operations/constant");
 
 var app = express();
 
@@ -27,10 +28,40 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/users', (req, res, next) => {
+
+var options = {
+  explorer: true,
+  swaggerOptions: {
+    urls: [
+      {
+        url: "http://localhost:5000/swagger/userdata.json",
+        name: 'Spec1'
+      },
+      {
+        url: "http://localhost:5000/swagger/swagger.json",
+        name: 'Spec2'
+      },
+      {
+        url: "http://localhost:5000/swagger/users.json",
+        name: 'users'
+      }
+    ]
+  }
+}
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, options));
+
+/* GET users listing. */
+app.get('/v0/users/ping', function (req, res) {
+  common.httpResponse(req, res, SUCCESS, {
+      message: "System is working fine"
+  })
+});
+
+app.use('/v0/users', (req, res, next) => {
   const token = req.headers.authorization;
   if (!token) {
-    common.httpResponse(req, res, ERROR, {
+    common.httpResponse(req, res, BAD_REQUEST, {
       message: "Authorization token is not found."
     });
     return;
@@ -39,8 +70,8 @@ app.use('/users', (req, res, next) => {
   const app_token = common.getAuthoriztionToken();
   if (token === app_token) {
     next();
-  } else common.httpResponse(req, res, ERROR, {
-    message: "Authorization token is matched.",
+  } else common.httpResponse(req, res, FORBIDDEN, {
+    message: "Authorization token is not matched.",
     token: app_token
   });
 }, usersRouter);

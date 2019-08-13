@@ -1,0 +1,2144 @@
+{
+	"openapi": "3.0.0",
+	"servers": [
+		{
+			"description": "Production Backend",
+			"url": "http://localhost:5000"
+		},
+		{
+			"description": "Local Development Backend",
+			"url": "http://127.0.0.1:5000"
+		}
+	],
+	"info": {
+		"version": "0.0.15-oas3",
+		"title": "Liason",
+		"description": "# The new way to schedule Food\nAPI user registration capabilities for CookinAt App\n## Data needed\nPlease note that we create more fields *internally* than the\nones in the schemas, ready to be filled later in Settings view.\n## Proposed User SignUp-LogIn-ChooseRole Flow\n1. User enter the _SignUp View_ and send `name`, `email`, `role`\nand `password` to Backend\n2. Backend send back \n`userId` (for support and `/auth/login/forgot`), \n`name` (for UI) and \n`email` (for UI and `/auth/signup/verification`).\n3. Also Backend send a `verificationCode` to user's email. User can request re-send [here](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/getAuthSignUpVerificationResend)\n4. User enter the _Verification View_ and enter `verificationCode`. \nThe App must **automatically include email**, and send\n5. Backend answers.  If no match, _SignUp Error View_,\nif match _SignUp Ok View_\n6. User go to _LogIn View_ and enter `email` and `password`\n7. If all ok, user can go to _Home View_.\nIf no match User can go to _Login Password Forgot View_.\n8. If User in _Login Password Forgot View_, then send in petition\n`email` , a \n`One Time Password (OTP)` is generated and sent to email given\n9. User can enter _LogIn View_ \nand enter `OTP` as password to enter and set new `password` in settings, OR\n10. User enter in _LogIn View_ and enter normally.\n11. Then after _Login View_ user must enter _Home View_\n13. ...\n14. Profit!\n\nNow let's see which endpoints are used in each step:\n1. [POST /auth/signup](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/postAuthSignup) (Diner) /\n    [POST /auth/signup/cook](http://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/postAuthSignupCook) (Cook)\n2. Backend response to User\n3. Backend internal operation\n4. [POST /auth/signup/verification](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/getAuthSignUpVerification)\n5. Backend response\n6. [POST /auth/login](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/postAuthLogin)\n7. Backend response\n8. [GET /auth/login/forgot](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/getAuthLoginForgot)\n9. [POST /auth/login](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/postAuthLogin)\n10. [POST /auth/login](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/postAuthLogin)\n\n# Diner\n\n## Sign Up [POST /auth/signup](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/App%20Authorization/postAuthSignup)\n\nUsers will require to sign up in order to purchase any service.\n\nIn order to sign up, a user must provide:\n\n* First Name *\n* Last Name *\n* Email *\n* Password *\n* Phone Number *\n\nFields with an asterisk at the end are required. \n\nUsers will optionally upload an avatar picture. A default avatar picture will be loaded from gravatar.\n\n## Find Cook\n\nUsers do not require to sign-in in order to use the 'find a cook' service.\n\nIn order to find a cook, the user must (* = required):\n\n*  Select the place where the event is gonna be *\n*  Date and time when the event is taking place\n*  Food style\n*  Number of diners\n*  Price range\n*  Reviews\n*  Allergies\n\n# Cook\n\n## Sign Up  [POST /auth/signup/cook](http://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/postAuthSignupCook) \n\nCook can sign-up by filling an initial form with the following information:\n\n* First Name *\n* Last Name *\n* Email *\n* Phone Number\n* Password\n* Last 4 SSN (police report) (figure if is required)\n* Food manager certification (picture)\n* Instagram account\n\nOnce the cook signs up, they can only be listed in the system prior approval (police report and food manager certification approval).\n\n## Complete Profile [PATCH /user/setting/cook](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/patchUserSettingCook)\n\nOnce a cook has been approved, they can complete their profile.\n\n## Biography (max 1200 characteres) [PATCH /user/setting/cook](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/patchUserSettingCook)\n\nCooks must include a description of themselves. The platform must encourage cooks to follow a provided guideline.\n\n## Cooking schedule [PATCH /user/setting/cook](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/patchUserSettingCook)\n\nCooks can check in a week calendar, which dates they are available for work (mon, tue, wed, etc)\n\nPer day, they must be able to select a range of hours of operation.\n\nThey can also mark certain dates (or range of dates) as unavailable.\n\n## Introduction Video [PATCH /user/setting/cook](https://www.cookinat.com/api/?urls.primaryName=USER%20v0#/Cook%20Operation/patchUserSettingCook)\n\nCooks will be able to provide a video of themselves they previously uploaded either on YouTube or Vimeo."
+	},
+	"security": [
+		{
+			"application": [
+				"read",
+				"write"
+			]
+		}
+	],
+	"paths": {
+		"/ping": {
+			"get": {
+				"summary": "Server heartbeat operation",
+				"description": "This operation shows current *status* of server.<br/> If `200` then all ok, if `500` a problem is there.<br/> __Dev Oriented Endpoint__",
+				"security": [],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"System"
+				]
+			}
+		},
+		"/geolocation": {
+			"summary": "Obtain your local data",
+			"description": "Based on [ipstack](https://ipstack.com). You can use [ipify](http://api.ipify.org/) to get your IP. Give me your ip and you'll get a lot more.",
+			"post": {
+				"operationId": "postGeolocation",
+				"summary": "Give me your IP, I'll give more info about you.",
+				"description": "Using [ipstack](https://ipstack.com),  retrieve general info based on your IP<br/> Main purpose is getting *language* and *country*.<br/> > Data must be modified in client to obtain all that is needed.<br/> > Maybe do heavy format in server?",
+				"security": [],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Geo"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"405": {
+						"description": "Invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"System",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth": {
+			"summary": "Introspection of API Auth",
+			"description": "Get info about Endpoint, return info",
+			"get": {
+				"summary": "get Info about /auth Endpoint",
+				"description": "Get the public endpoints available on this namespace.",
+				"operationId": "getAuth",
+				"security": [],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Info"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information"
+				]
+			}
+		},
+		"/v0/auth/login": {
+			"summary": "Get jwt token with your email and password",
+			"description": "Send me your credentials, I'll tell you if you can enter",
+			"post": {
+				"operationId": "postAuthLogin",
+				"summary": "Validate your user credentials to enter CookinAt' app",
+				"description": "Given email and password, create and return jwt token and DB id",
+				"security": [],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Login"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"401": {
+						"description": "Email or password is wrong",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"409": {
+						"$ref": "#/components/responses/Email409"
+					},
+					"422": {
+						"description": "Errors in Validation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth/login/{email}/forgot": {
+			"summary": "The user forgot the password",
+			"description": "the user don't have to provide nothing more than the email",
+			"get": {
+				"summary": "Send a Change password request",
+				"description": "The user must be capable of change the password by request. An One time Password (OTP) is sent to her/his email",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/Email"
+					}
+				],
+				"operationId": "getAuthLoginForgot",
+				"security": [],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Info"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth/login/recovery": {
+			"summary": "The user enter the new the password",
+			"description": "the user don't have to provide nothing more than the email",
+			"post": {
+				"deprecated": true,
+				"summary": "Change password with verificationCode",
+				"description": "The user must be capable of change the password by request",
+				"operationId": "postAuthLoginRecovery",
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Recovery"
+				},
+				"security": [],
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth/signup": {
+			"summary": "Create user in database of Users",
+			"description": "If you want access come here first",
+			"post": {
+				"operationId": "postAuthSignup",
+				"summary": "Get access to CookinAt' App creating a User",
+				"description": "In the App you give name, email and password.\nWe store that data, encrypt your password and\nsent you a verification code to your email.\nThen you must visit the next view, Verification, \nand enter the code provided in the email.\nOnly then you can enter the App in LogIn view.\nIf verification step not done the user is not allowed to operate.",
+				"security": [],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Signup"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/SignUp201"
+					},
+					"409": {
+						"$ref": "#/components/responses/Email409"
+					},
+					"422": {
+						"description": "Errors in Validation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth/signup/cook": {
+			"summary": "Create user in database of Users",
+			"description": "If you want access come here first",
+			"post": {
+				"operationId": "postAuthSignupCook",
+				"summary": "Get access to CookinAt' App creating a User",
+				"description": "In the App you give name, email and password.\nWe store that data, encrypt your password and\nsent you a verification code to your email.\nThen you must visit the next view, Verification, \nand enter the code provided in the email.\nOnly then you can enter the App in LogIn view.\nIf verification step not done the user is not allowed to operate.",
+				"security": [],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/SignupCook"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/SignUp201"
+					},
+					"409": {
+						"$ref": "#/components/responses/Email409"
+					},
+					"422": {
+						"description": "Errors in Validation",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"Cook Operation"
+				]
+			}
+		},
+		"/v0/auth/signup/verification": {
+			"summary": "The user must send the code he got in email",
+			"description": "the user don't have to provide nothing more than the email",
+			"post": {
+				"summary": "Verificate your email",
+				"description": "The user must be capable of change the password by request\nAn verification code is sent to your email, that code is\nrequested here.\n\nThe verification code must be a unique 6 alphanumeric and \nmatch the one we sent you.",
+				"operationId": "getAuthSignUpVerification",
+				"security": [],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Verification"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/auth/signup/verification/resend/{email}": {
+			"summary": "The user can resend the verification code he got in email",
+			"description": "the user don't have to provide nothing more than the email",
+			"get": {
+				"summary": "Verificate your email",
+				"description": "The user must be capable of change the password by request\nAn verification code is sent to your email, that code is\nrequested here.\n\nThe verification code will be a unique 6 alphanumeric",
+				"operationId": "getAuthSignUpVerificationResend",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/Email"
+					}
+				],
+				"security": [],
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/user": {
+			"summary": "User related operations",
+			"description": "I dont have an id here",
+			"get": {
+				"summary": "Info about /user Endpoint",
+				"description": "Return an explanation of endpoint",
+				"operationId": "getUser",
+				"security": [],
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Info"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information"
+				]
+			},
+			"post": {
+				"operationId": "postUser",
+				"summary": "CREATE an User by request",
+				"description": "An Admin create an User with the necessary data.",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/User"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/UserCreate201"
+					},
+					"409": {
+						"$ref": "#/components/responses/Email409"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					},
+					"4XX": {
+						"$ref": "#/components/responses/ClientError"
+					}
+				},
+				"tags": [
+					"User Database",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/{userId}": {
+			"summary": "operations in User from specific id",
+			"description": "Need to have a valid token",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"operationId": "getUserId",
+				"summary": "READ info about certain user",
+				"description": "provide an id (and a valid token) to get the info of the user the id belongs",
+				"responses": {
+					"200": {
+						"description": "The User Object returned successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "No user found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Database",
+					"Obtain Information"
+				]
+			},
+			"delete": {
+				"operationId": "deleteUser",
+				"summary": "DELETE the user",
+				"description": "Give an ID and I will delete the user that belongs to",
+				"responses": {
+					"204": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Database",
+					"Admin Operation"
+				]
+			},
+			"patch": {
+				"operationId": "patchUser",
+				"summary": "UPDATE user partially (Preferred)",
+				"description": "Admin or user Modify current info of user partially (Preferred)",
+				"requestBody": {
+					"$ref": "#/components/requestBodies/User"
+				},
+				"responses": {
+					"201": {
+						"description": "The User Object Updated successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User201"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Database",
+					"User Operation",
+					"Admin Operation"
+				]
+			},
+			"put": {
+				"operationId": "putUser",
+				"summary": "UPDATE user",
+				"description": "Modify current info of user",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/User"
+				},
+				"responses": {
+					"201": {
+						"description": "The User Object Updated successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/User201"
+								}
+							}
+						}
+					},
+					"405": {
+						"description": "Invalid input",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Database",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/{userId}/claim": {
+			"summary": "Pertain claims raised by users",
+			"description": "The user and admin must be capable of check and update claims",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"deprecated": true,
+				"summary": "Check claim raised by user",
+				"description": "User and Admin must be capable of check Yes checkall the info needed about each claim raised",
+				"operationId": "getUserClaim",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Operation",
+					"Obtain Information",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/{userId}/contact": {
+			"summary": "Check contact for a given user",
+			"description": "It check on contact info for a certain user",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"summary": "Check contact for a given user",
+				"description": "(DINER CAN'T OPERATE THIS) Get info to contact client, namely telephone and email",
+				"operationId": "getUserContact",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"Cook Operation",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/{userId}/setting": {
+			"summary": "Check setting for a given user",
+			"description": "It check on Setting database for a certain user",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"summary": "Check",
+				"description": "App must automatically have set from get user info\nall the settings. If overwrited with spaces or\nempty strings, all data is lost!",
+				"operationId": "getUserSetting",
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					},
+					"default": {
+						"description": "Add Setting Database Error (504)"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/user/{userId}/type": {
+			"summary": "Check user's type",
+			"description": "the user don't have to provide nothing more than the userId",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"summary": "Read User's role",
+				"description": "The user must have just one role for account.",
+				"operationId": "getUserType",
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"User Operation"
+				]
+			}
+		},
+		"/v0/user/all": {
+			"summary": "Pertains all the users",
+			"description": "Operations made with all the users",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"operationId": "getUsers",
+				"summary": "Admin Get a list of all users",
+				"description": "Returns an array of all users registered",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/all/{userType}": {
+			"summary": "Easy query user to list by user type",
+			"description": "`userType` can be `cook|diner|staff|admin|consumer'",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/UserType"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"summary": "Filter Users by Type",
+				"description": "Please use it primarily for Cook and Diner user types",
+				"operationId": "getUserAllUserType",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"User Operation",
+					"Admin Operation",
+					"Consumer Operation"
+				]
+			}
+		},
+		"/v0/user/all/cook/{userId}/dish": {
+			"summary": "Get all Dish for a certain cook",
+			"description": "Actually it makes the same as `/v0/dish/{userId}/user`",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"deprecated": true,
+				"summary": "List all Dishes for a certain cook",
+				"description": "Need a userId",
+				"operationId": "getUserAllCookDish",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"User Operation",
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/all/cook/{userId}/review": {
+			"summary": "Get all Reviews for a certain cook",
+			"description": "Actually it makes the same as `/v0/reviews/{userId}/user`",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/UserId"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"get": {
+				"deprecated": true,
+				"summary": "List all reviews",
+				"description": "Need a userId",
+				"operationId": "getUserAllCookReview",
+				"responses": {
+					"200": {
+						"description": "The Users Array returns successfuly",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Users201"
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "BAD_REQUEST_ERROR",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ClientError"
+								}
+							}
+						}
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Obtain Information",
+					"User Operation",
+					"Admin Operation",
+					"Consumer Operation"
+				]
+			}
+		},
+		"/v0/user/claim": {
+			"summary": "Related to claims",
+			"description": "User must be capable of put a claim on bad service",
+			"parameters": [
+				{
+					"$ref": "#/components/parameters/JWT"
+				},
+				{
+					"$ref": "#/components/parameters/APIKey"
+				}
+			],
+			"post": {
+				"deprecated": true,
+				"summary": "User posts a Claim on bad service",
+				"description": "Must include all the info needed",
+				"operationId": "postUserClaim",
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Operation"
+				]
+			}
+		},
+		"/v0/user/lock": {
+			"summary": "Admin lock or unlock user for certain role",
+			"description": "Admin must be capable of lock users from certain roles",
+			"patch": {
+				"summary": "Admin or System lock or unlock user",
+				"description": "Changes the lock field on user document",
+				"operationId": "patchUserLock",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Lock"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/setting/cook": {
+			"summary": "Change the Cook's settings",
+			"description": "Maybe by admin or by Cook itself. \n**App must automatically have set from get user info\nall the settings. If overwrited with spaces or\nempty strings, all data is lost!**",
+			"patch": {
+				"summary": "The Cook changes partially the settings",
+				"description": "Its not necessary to change all settings",
+				"operationId": "patchUserSettingCook",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/JWT"
+					},
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/SettingCook"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Cook Operation"
+				]
+			}
+		},
+		"/v0/user/setting": {
+			"summary": "Change the user's settings",
+			"description": "Maybe by admin or by user itself. \n**App must automatically have set from get user info\nall the settings. If overwrited with spaces or\nempty strings, all data is lost!**",
+			"patch": {
+				"summary": "The user changes partially the settings",
+				"description": "Its not necessary to change all settings",
+				"operationId": "patchUserSetting",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/JWT"
+					},
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/Setting"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"User Operation"
+				]
+			},
+			"put": {
+				"summary": "Admin change settings for a user",
+				"description": "Must change all settings",
+				"operationId": "putUserSetting",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/SettingCook"
+				},
+				"responses": {
+					"200": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Admin Operation"
+				]
+			}
+		},
+		"/v0/user/type": {
+			"summary": "Admin choose if cook or diner",
+			"description": "All the other roles are given programatically for an admin",
+			"patch": {
+				"summary": "Change if user is cook or diner",
+				"description": "The Admin must be capable of change if is cook or diner by request",
+				"operationId": "patchUserType",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/JWT"
+					},
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/UserType"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"App Authorization",
+					"User Operation"
+				]
+			},
+			"put": {
+				"summary": "Change if you are cook or diner",
+				"description": "The Admin must be capable of change if is cook or diner by request",
+				"operationId": "putUserType",
+				"parameters": [
+					{
+						"$ref": "#/components/parameters/APIKey"
+					}
+				],
+				"requestBody": {
+					"$ref": "#/components/requestBodies/UserType"
+				},
+				"responses": {
+					"201": {
+						"$ref": "#/components/responses/Ok"
+					},
+					"500": {
+						"$ref": "#/components/responses/ServerError"
+					}
+				},
+				"tags": [
+					"Admin Operation"
+				]
+			}
+		}
+	},
+	"tags": [
+		{
+			"name": "System",
+			"description": "Non business logic"
+		},
+		{
+			"name": "App Authorization",
+			"description": "Login and Signup"
+		},
+		{
+			"name": "User Database",
+			"description": "CRUD operations on User database"
+		},
+		{
+			"name": "User Operation",
+			"description": "General User Interactions"
+		},
+		{
+			"name": "Obtain Information",
+			"description": "General Purposing Information Endpoints"
+		},
+		{
+			"name": "Admin Operation",
+			"description": "High level user related operations"
+		},
+		{
+			"name": "Consumer Operation",
+			"description": "API endpoints available for Public Use of Consumer"
+		},
+		{
+			"name": "Cook Operation",
+			"description": "Operations restricted to Cook"
+		}
+	],
+	"components": {
+		"schemas": {
+			"Geo": {
+				"type": "object",
+				"required": [
+					"ip"
+				],
+				"properties": {
+					"ip": {
+						"type": "string",
+						"description": "IP address format string from the user PC",
+						"example": "127.0.0.1"
+					}
+				}
+			},
+			"Login": {
+				"type": "object",
+				"required": [
+					"email",
+					"password"
+				],
+				"properties": {
+					"email": {
+						"type": "string",
+						"description": "Complete email without spaces, and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"password": {
+						"type": "string",
+						"description": "password with more than 6 and less than 24 alphanumeric",
+						"example": "password123"
+					}
+				}
+			},
+			"Signup": {
+				"type": "object",
+				"required": [
+					"firstName",
+					"lastName",
+					"email",
+					"password",
+					"telephone"
+				],
+				"properties": {
+					"firstName": {
+						"type": "string",
+						"description": "Names with more than 3 letters",
+						"example": "John",
+						"minLength": 3
+					},
+					"lastName": {
+						"type": "string",
+						"description": "Surnames with more than 3 letters",
+						"example": "Doe",
+						"minLength": 3
+					},
+					"email": {
+						"type": "string",
+						"description": "email without spaces and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"password": {
+						"type": "string",
+						"description": "password with more than 8 and less than 24 alphanumeric symbols",
+						"example": "password123",
+						"minLength": 6,
+						"maxLength": 24
+					},
+					"telephone": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					}
+				}
+			},
+			"SignupCook": {
+				"type": "object",
+				"required": [
+					"firstName",
+					"lastName",
+					"email",
+					"password",
+					"telephone",
+					"role"
+				],
+				"properties": {
+					"firstName": {
+						"type": "string",
+						"description": "Names with more than 3 letters",
+						"example": "John",
+						"minLength": 3
+					},
+					"lastName": {
+						"type": "string",
+						"description": "Surnames with more than 3 letters",
+						"example": "Doe",
+						"minLength": 3
+					},
+					"email": {
+						"type": "string",
+						"description": "email without spaces and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"password": {
+						"type": "string",
+						"description": "password with more than 8 and less than 24 alphanumeric symbols",
+						"example": "password123",
+						"minLength": 6,
+						"maxLength": 24
+					},
+					"telephone": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					},
+					"last4SSN": {
+						"type": "string"
+					},
+					"certificationPhoto": {
+						"type": "string"
+					},
+					"instagram": {
+						"type": "string"
+					}
+				}
+			},
+			"User": {
+				"type": "object",
+				"required": [
+					"firstName",
+					"lastName",
+					"email",
+					"password",
+					"telephone"
+				],
+				"properties": {
+					"nickname": {
+						"type": "string",
+						"description": "A short name to be called if preferred",
+						"example": "Jhonny"
+					},
+					"firstName": {
+						"type": "string",
+						"description": "Names with more than 3 letters",
+						"example": "John",
+						"minLength": 3
+					},
+					"lastName": {
+						"type": "string",
+						"description": "Surnames with more than 3 letters",
+						"example": "Doe",
+						"minLength": 3
+					},
+					"email": {
+						"type": "string",
+						"description": "email without spaces and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"password": {
+						"type": "string",
+						"description": "password with more than 6 and less than 24 alphanumeric symbols",
+						"example": "password123",
+						"minLength": 6,
+						"maxLength": 24
+					},
+					"telephone": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					},
+					"last4SSN": {
+						"type": "string",
+						"minLength": 9,
+						"maxLength": 9
+					},
+					"bio": {
+						"type": "string",
+						"description": "The cook describe her/him self following provided guidelines",
+						"maxLength": 1200
+					},
+					"video": {
+						"type": "string",
+						"description": "A video of the cook previously  uploaded on Youtube or Vimeo"
+					},
+					"cookingSchedule": {
+						"type": "string",
+						"description": "Schedule in table format. A csv semicolon row separated in string for easy conversion"
+					},
+					"notifications": {
+						"type": "string",
+						"enum": [
+							"all",
+							"noSugestions",
+							"important",
+							"none"
+						],
+						"example": "all"
+					},
+					"lastPayOffMethod": {
+						"type": "string"
+					},
+					"lastPaymentMethod": {
+						"type": "string"
+					}
+				},
+				"xml": {
+					"name": "User"
+				}
+			},
+			"Setting": {
+				"type": "object",
+				"required": [
+					"userId",
+					"firstName",
+					"lastName",
+					"email",
+					"telephone"
+				],
+				"properties": {
+					"userId": {
+						"type": "string"
+					},
+					"firstName": {
+						"type": "string",
+						"description": "Names with more than 3 letters",
+						"example": "John",
+						"minLength": 3
+					},
+					"lastName": {
+						"type": "string",
+						"description": "Surnames with more than 3 letters",
+						"example": "Doe",
+						"minLength": 3
+					},
+					"email": {
+						"type": "string",
+						"description": "email without spaces and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"telephone": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					},
+					"notifications": {
+						"type": "string",
+						"enum": [
+							"all",
+							"noSugestions",
+							"important",
+							"none"
+						],
+						"example": "all"
+					},
+					"lastPaymentMethod": {
+						"type": "string",
+						"description": "where to charge the money you own to CookinAt"
+					}
+				}
+			},
+			"SettingCook": {
+				"type": "object",
+				"required": [
+					"userId",
+					"firstName",
+					"lastName",
+					"email",
+					"telephone"
+				],
+				"properties": {
+					"userId": {
+						"type": "string"
+					},
+					"firstName": {
+						"type": "string",
+						"description": "Names with more than 3 letters",
+						"example": "John",
+						"minLength": 3
+					},
+					"lastName": {
+						"type": "string",
+						"description": "Surnames with more than 3 letters",
+						"example": "Doe",
+						"minLength": 3
+					},
+					"email": {
+						"type": "string",
+						"description": "email without spaces and more than 3 letters",
+						"example": "example@mail.com"
+					},
+					"telephone": {
+						"type": "string"
+					},
+					"avatar": {
+						"type": "string"
+					},
+					"last4SSN": {
+						"type": "string",
+						"description": "Your nine-digit number issued to U.S. citizens, permanent residents, and temporary (working) residents"
+					},
+					"certificationPhoto": {
+						"type": "string",
+						"description": "National Registry of Food Safety Professionals (NRFSP) extended certificate"
+					},
+					"instagram": {
+						"type": "string"
+					},
+					"bio": {
+						"type": "string",
+						"description": "The cook describe her/him self following provided guidelines",
+						"maxLength": 1200
+					},
+					"video": {
+						"type": "string",
+						"description": "A video of the cook previously  uploaded on YoutuBe or Vimeo"
+					},
+					"cookingSchedule": {
+						"type": "string",
+						"description": "Schedule in table format. A csv semicolon row separated in string for aesy conversion",
+						"example": [
+							"time",
+							"monday",
+							"tuesday",
+							"wednesday",
+							"thrusday",
+							"friday",
+							"saturday",
+							"sunday; 1600",
+							"NA",
+							"A",
+							"A",
+							"NA",
+							"A",
+							"A",
+							"A"
+						]
+					},
+					"notifications": {
+						"type": "string",
+						"enum": [
+							"all",
+							"noSugestions",
+							"important",
+							"none"
+						],
+						"example": "all"
+					},
+					"lastPayOffMethod": {
+						"type": "string",
+						"description": "where to deposit money for you"
+					},
+					"lastPaymentMethod": {
+						"type": "string",
+						"description": "where to charge the money you own to CookinAt"
+					}
+				}
+			},
+			"Ok": {
+				"type": "object",
+				"properties": {
+					"sucess": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"data": {
+						"type": "object",
+						"description": "object with valuable data"
+					}
+				}
+			},
+			"ServerError": {
+				"type": "object",
+				"properties": {
+					"sucess": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"errors": {
+						"description": "object with valuable data",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"description": "Describe the error",
+							"properties": {
+								"msg": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"example": {
+					"sucess": false,
+					"msg": "Internal Server Error",
+					"errors": [
+						{
+							"msg": "error1"
+						},
+						{
+							"msg": "error2"
+						},
+						"...otherErrors"
+					]
+				}
+			},
+			"ClientError": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string"
+					},
+					"errors": {
+						"description": "object with valuable data",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"description": "Describe the error",
+							"properties": {
+								"msg": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				},
+				"example": {
+					"sucess": false,
+					"msg": "Client Sent Incorrect or Incomplete Data",
+					"errors": [
+						{
+							"msg": "error1"
+						},
+						{
+							"msg": "error2"
+						},
+						"...otherErrors"
+					]
+				}
+			},
+			"Login200": {
+				"type": "object",
+				"properties": {
+					"sucess": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"data": {
+						"type": "object",
+						"description": "object with valuable data",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"token": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			},
+			"User201": {
+				"type": "object",
+				"properties": {
+					"sucess": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"data": {
+						"type": "object",
+						"description": "object with valuable data",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"email": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
+						}
+					}
+				}
+			},
+			"Users201": {
+				"type": "object",
+				"properties": {
+					"sucess": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"data": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"type": "string"
+								},
+								"email": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"Info": {
+				"type": "object",
+				"properties": {
+					"success": {
+						"type": "boolean"
+					},
+					"msg": {
+						"type": "string",
+						"description": "Explanatory message"
+					},
+					"docsUrl": {
+						"type": "string",
+						"description": "Where to find help"
+					},
+					"data": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"path": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"Lock": {
+				"type": "object",
+				"required": [
+					"userId",
+					"locktype"
+				],
+				"properties": {
+					"locktype": {
+						"type": "string"
+					},
+					"userId": {
+						"type": "string"
+					},
+					"reasons": {
+						"type": "string"
+					}
+				}
+			},
+			"Verification": {
+				"type": "object",
+				"required": [
+					"email",
+					"verificationCode"
+				],
+				"properties": {
+					"email": {
+						"type": "string"
+					},
+					"verificationCode": {
+						"description": "Code sent to email to validate Sign Up",
+						"type": "string"
+					}
+				}
+			},
+			"UserType": {
+				"type": "object",
+				"required": [
+					"type",
+					"userId"
+				],
+				"properties": {
+					"userId": {
+						"type": "string"
+					},
+					"type": {
+						"description": "Choose cook or diner",
+						"type": "string",
+						"enum": [
+							"cook",
+							"diner"
+						]
+					}
+				}
+			},
+			"Recovery": {
+				"type": "object",
+				"required": [
+					"email"
+				],
+				"properties": {
+					"email": {
+						"type": "string"
+					}
+				}
+			}
+		},
+		"requestBodies": {
+			"Geo": {
+				"description": "IP needed to get info",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Geo"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Geo"
+						}
+					}
+				}
+			},
+			"Login": {
+				"description": "User credentials needed",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Login"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Login"
+						}
+					}
+				}
+			},
+			"Signup": {
+				"description": "User related data needed",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Signup"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Signup"
+						}
+					}
+				}
+			},
+			"SignupCook": {
+				"description": "User related data needed",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/SignupCook"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/SignupCook"
+						}
+					}
+				}
+			},
+			"User": {
+				"description": "User object",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/User"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/User"
+						}
+					}
+				}
+			},
+			"UserDelete": {
+				"description": "Delete User object",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/User"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/User"
+						}
+					}
+				}
+			},
+			"Lock": {
+				"description": "Changes availability of user",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Lock"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Lock"
+						}
+					}
+				}
+			},
+			"Verification": {
+				"description": "Asks for verification code and user' email",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Verification"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Verification"
+						}
+					}
+				}
+			},
+			"Recovery": {
+				"description": "Asks for user' email and",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Recovery"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Recovery"
+						}
+					}
+				}
+			},
+			"UserType": {
+				"description": "Asks to Change User's Role",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/UserType"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/UserType"
+						}
+					}
+				}
+			},
+			"Setting": {
+				"description": "Asks to Change User's Settings",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/Setting"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Setting"
+						}
+					}
+				}
+			},
+			"SettingCook": {
+				"description": "Asks to Change Cook's Settings",
+				"required": true,
+				"content": {
+					"application/x-www-form-urlencoded": {
+						"schema": {
+							"$ref": "#/components/schemas/SettingCook"
+						}
+					},
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/SettingCook"
+						}
+					}
+				}
+			}
+		},
+		"responses": {
+			"ServerError": {
+				"description": "Internal Server Error",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ServerError"
+						}
+					}
+				}
+			},
+			"ClientError": {
+				"description": "Client Sent Incorrect or incomplete Data",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ClientError"
+						}
+					}
+				}
+			},
+			"Email409": {
+				"description": "Email already exists",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/ClientError"
+						}
+					}
+				}
+			},
+			"Ok": {
+				"description": "The petition returned successfuly",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Ok"
+						}
+					}
+				}
+			},
+			"Login200": {
+				"description": "User Log in successfully (email, token and id inside of data)",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Login200"
+						}
+					}
+				},
+				"links": {
+					"getUserById": {
+						"operationId": "getUserId",
+						"parameters": {
+							"userId": "$response.body#/data/id"
+						},
+						"description": "The `id` value returned in the response can be used as the `userId` parameter in `GET /user/{userId}`.\n"
+					}
+				}
+			},
+			"SignUp201": {
+				"description": "User Sign Up successfully (email and name inside of data)",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/User201"
+						}
+					}
+				},
+				"links": {
+					"getEmail": {
+						"operationId": "postAuthLogin",
+						"parameters": {
+							"userId": "$response.body#/data/email"
+						},
+						"description": "The `email` value returned in the response can be used as the `email` parameter in `POST /auth/login`.\n"
+					}
+				}
+			},
+			"UserCreate201": {
+				"description": "User Created Successfuly",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/User201"
+						}
+					}
+				},
+				"links": {
+					"getEmail": {
+						"operationId": "postAuthLogin",
+						"parameters": {
+							"userId": "$response.body#/data/email"
+						},
+						"description": "The `email` value returned in the response can be used as the `email` parameter in `POST /auth/login`.\n"
+					}
+				}
+			},
+			"Info": {
+				"description": "Info about this path",
+				"content": {
+					"application/json": {
+						"schema": {
+							"$ref": "#/components/schemas/Info"
+						}
+					}
+				}
+			}
+		},
+		"parameters": {
+			"JWT": {
+				"in": "header",
+				"name": "cookinat-api-jwt",
+				"description": "jwt Token given in /login step for App use",
+				"schema": {
+					"type": "string"
+				},
+				"required": true
+			},
+			"APIKey": {
+				"in": "header",
+				"name": "cookinat-api-key",
+				"description": "API key for admin | consumer | staff | accounting",
+				"schema": {
+					"type": "string"
+				}
+			},
+			"UserId": {
+				"name": "userId",
+				"in": "path",
+				"description": "ID of user to return",
+				"required": true,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"UserType": {
+				"name": "userType",
+				"in": "path",
+				"description": "If user is Cook or Diner",
+				"required": true,
+				"schema": {
+					"type": "string",
+					"enum": [
+						"admin",
+						"consumer",
+						"cook",
+						"diner",
+						"staff",
+						"accounting",
+						"none"
+					],
+					"example": "none"
+				}
+			},
+			"ClaimId": {
+				"name": "claimId",
+				"in": "path",
+				"description": "ID os certain Claim",
+				"required": true,
+				"schema": {
+					"type": "string"
+				}
+			},
+			"Email": {
+				"name": "email",
+				"in": "path",
+				"description": "email to check for password recovery",
+				"required": true,
+				"schema": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}

@@ -172,7 +172,7 @@ var decryptData = function (username, password, cb) {
 }
 
 /**
- * Civic response while operation has done
+ * TestIO response while operation has done
  * @param {*request} req 
  * @param {*response} res 
  * @param {*string} status 
@@ -203,91 +203,135 @@ var httpResponse = function (req, res, status, response) {
                 })
             break;
         case 'err':
-            res.status(200)
+            res.status(501)
                 .json({
-                    status: 400,
+                    status: 501,
                     code: 1,
                     data: response,
                     message: "Error",
                     emptyKeys: null,
-                    error: false
+                    error: true
                 })
             break;
         case 'notValid':
-            res.status(200)
+            res.status(401)
                 .json({
                     code: 1,
                     status: 401,
-                    data: [],
+                    data: response,
                     message: "NotValid",
                     emptyKeys: null,
-                    error: false
+                    error: true
+                })
+            break;
+        case 'notChanged':
+            res.status(404)
+                .json({
+                    code: 1,
+                    status: 404,
+                    data: response,
+                    message: "NotValid",
+                    emptyKeys: null,
+                    error: true
                 })
             break;
         case 'present':
-            res.status(200)
+            res.status(409)
                 .json({
                     code: 1,
-                    status: 400,
+                    status: 409,
                     data: response,
                     message: "Present",
                     emptyKeys: null,
-                    error: false
+                    error: true
                 })
             break;
         case 'noValue':
-            res.status(200)
+            res.status(404)
                 .json({
                     code: 1,
-                    status: 400,
-                    data: [],
+                    status: 404,
+                    data: response,
                     message: "NoValue",
                     emptyKeys: null,
-                    error: false
+                    error: true
+                })
+            break;
+        case 'notAuthorized':
+            res.status(401)
+                .json({
+                    code: 1,
+                    status: 401,
+                    data: response,
+                    message: "Not Authorized",
+                    emptyKeys: null,
+                    error: true
                 })
             break;
         case 'objEmpty':
-            res.status(200)
+            res.status(400)
                 .json({
                     code: 1,
                     status: 400,
                     data: [],
                     message: "ObjEmpty",
                     emptyKeys: null,
-                    error: false
+                    error: true
                 })
             break;
-        case "validationErr":
-            res.status(200)
+        case 'badRequest':
+            res.status(400)
                 .json({
                     code: 1,
                     status: 400,
+                    data: response,
+                    message: "Bad REQUEST",
+                    emptyKeys: null,
+                    error: true
+                })
+            break;
+        case "validationErr":
+            res.status(422)
+                .json({
+                    code: 1,
+                    status: 422,
                     data: [],
                     message: "ValidationError",
                     emptyKeys: response,
-                    error: false
+                    error: true
                 })
             break;
         case "verificationErr":
-            res.status(200)
+            res.status(304)
                 .json({
                     code: 1,
-                    status: 401,
+                    status: 304,
                     data: [],
                     message: "VarificationError",
                     emptyKeys: response,
-                    error: false
+                    error: true
                 })
             break;
         case "emailPresent":
-            res.status(200)
+            res.status(409)
                 .json({
                     code: 1,
-                    status: 200,
+                    status: 409,
                     data: response,
                     message: "EmailPresent",
                     emptyKeys: [],
-                    error: false
+                    error: true
+                })
+            break;
+        case "forbidden":
+            res.status(409)
+                .json({
+                    code: 1,
+                    status: 409,
+                    data: response,
+                    message: "FORBIDDEN",
+                    emptyKeys: [],
+                    error: true
                 })
             break;
         case "logedIn":
@@ -313,14 +357,14 @@ var httpResponse = function (req, res, status, response) {
                 })
             break;
         default:
-            res.status(200)
+            res.status(500)
                 .json({
                     code: 1,
                     status: 500,
                     data: [],
                     message: "InternalServerError",
                     emptyKeys: null,
-                    error: false
+                    error: true
                 })
     }
 }
@@ -372,7 +416,7 @@ var socketResponse = function (status, response) {
             return {
                 code: 1,
                 status: 400,
-                data: [],
+                data: response,
                 message: "NoValue",
                 emptyKeys: null,
                 error: false

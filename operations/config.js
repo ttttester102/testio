@@ -9,13 +9,30 @@ module.exports = {
             },
             {
                 key: "password",
-                isRequired: false,
+                isRequired: true,
+                type: "string"
+            }
+        ],
+        social_login: [
+            {
+                key: "social_media_name",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "social_media_id",
+                isRequired: true,
                 type: "string"
             }
         ],
         signup: [
             {
                 key: "username",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "email",
                 isRequired: true,
                 type: "string"
             },
@@ -28,15 +45,12 @@ module.exports = {
                 key: "mobile_number",
                 isRequired: true,
                 type: "number"
-            },
+            }
+        ],
+        forgot_password: [
             {
-                key: "social_media_name",
-                isRequired: false,
-                type: "string"
-            },
-            {
-                key: "social_media_id",
-                isRequired: false,
+                key: "username",
+                isRequired: true,
                 type: "string"
             }
         ],

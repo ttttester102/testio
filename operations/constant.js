@@ -48,5 +48,7 @@ module.exports = {
     USERS_CSV_JSON_DATA: "users_csv_json_data",
 
     ACCEPCT_CONTACT_RESPONSE: 1,
-    DECLINE_CONTACT_RESPONSE: 2
+    DECLINE_CONTACT_RESPONSE: 2,
+
+    SOCIAL_MEDIA_LOGIN: "social_media_login"
 } 

@@ -4,8 +4,9 @@ var {
     ERROR,
     NOVALUE,
     PRESENT,
-    AUTH_USER_DATA, 
-    NOT_AUTHORIZED
+    AUTH_USER_DATA,
+    NOT_AUTHORIZED,
+    SOCIAL_MEDIA_LOGIN
 } = require("./constant");
 var {
     ObjectID,
@@ -67,7 +68,7 @@ var signup = function (obj, cb) {
         if (err) close(client, ERROR, err, cb);
         else {
             var collection = db.collection('users');
-            var { username, password, mobile_number, social_media_name, social_media_id } = obj;
+            var { username, password, mobile_number, email } = obj;
             randomPassword(username, password, (password, slug) => {
                 collection.find({ username }).toArray((err, data) => {
                     if (err) close(client, ERROR, err, cb);
@@ -76,22 +77,61 @@ var signup = function (obj, cb) {
                             if (userAccessToken) {
                                 collection.insertOne({
                                     username,
+                                    email,
                                     userAccessToken,
                                     password,
                                     mobile_number,
-                                    social_media_name,
-                                    social_media_id,
                                     deletedStatus: 0,
                                     status: 0,
                                     slug
                                 }).then((data) => {
                                     getCollection(collection, { username }, { password: 0, slug: 0 }, client, cb);
                                 });
-                            } else close(client, ERROR, {}, cb);
+                            } else close(client, ERROR, {
+                                message: "Unable to generate access token, please try again."
+                            }, cb);
                         })
                     } else close(client, PRESENT, {}, cb);
                 });
             })
+        }
+    })
+}
+
+/**
+ * Post report
+ * @param {*object} obj 
+ * @param {*function} cb 
+ */
+var socialLogin = function (obj, cb) {
+    connection((err, db, client) => {
+        if (err) close(client, ERROR, err, cb);
+        else {
+            var collection = db.collection('users');
+            var { social_media_name, social_media_id } = obj;
+            collection.find({ username: social_media_id }).toArray((err, data) => {
+                if (err) close(client, ERROR, err, cb);
+                else if (data && data.length === 0) {
+                    generateToken(social_media_id, (userAccessToken, data) => {
+                        if (userAccessToken) {
+                            collection.insertOne({
+                                username: social_media_id,
+                                name: social_media_name,
+                                userAccessToken,
+                                loginType: SOCIAL_MEDIA_LOGIN,
+                                deletedStatus: 0,
+                                status: 0
+                            }).then((data) => {
+                                getCollection(collection, { username: social_media_id }, { password: 0, slug: 0 }, client, cb);
+                            });
+                        } else close(client, ERROR, {
+                            message: "Unable to generate access token, please try again."
+                        }, cb);
+                    })
+                } else if (data && data.length === 1) {
+                    getCollection(collection, { username: social_media_id }, { password: 0, slug: 0 }, client, cb);
+                } else close(client, NOVALUE, {}, cb);
+            });
         }
     })
 }
@@ -137,6 +177,33 @@ var verifyJsonToken = (req, res, next) => {
             });
         } else common.httpResponse(req, res, NOVALUE, response);
     });
+}
+
+/** 
+ * Forgot password
+ */
+var forgotPassword = (obj, cb) => {
+    connection((err, db, client) => {
+        if (err) close(client, ERROR, err, cb);
+        else {
+            var collection = db.collection('users');
+            const { username } = obj;
+            collection.find({ username }).toArray((err, data) => {
+                if (err) close(client, ERROR, err, cb);
+                else if (data && data.length !== 0) {
+                    const user = data[0];
+
+                    if(user && user.email) {
+                        close(client, SUCCESS, data[0], cb);
+                    } else close(client, NOVALUE, {
+                        message: "User email is not present."
+                    }, cb);
+                } else close(client, NOVALUE, {
+                    message: "User data is not available"
+                }, cb);
+            });
+        }
+    })
 }
 
 /** 
@@ -198,8 +265,10 @@ var editUserProfile = (obj, cb) => {
 
 module.exports = {
     login,
+    socialLogin,
     signup,
     getCollection,
     verifyJsonToken,
-    editUserProfile
+    editUserProfile, 
+    forgotPassword
 }

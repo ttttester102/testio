@@ -172,7 +172,7 @@ var decryptData = function (username, password, cb) {
 }
 
 /**
- * TestIO response while operation has done
+ * Make My Match response while operation has done
  * @param {*request} req 
  * @param {*response} res 
  * @param {*string} status 

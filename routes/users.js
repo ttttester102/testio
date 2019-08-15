@@ -5,7 +5,7 @@ var path = require('path');
 
 var common = require("../operations/common");
 var { SUCCESS, VALIDATE_ERROR, AUTH_USER_DATA } = require("../operations/constant");
-var { signup, login, verifyJsonToken, editUserProfile } = require("../operations/operation");
+var { signup, login, verifyJsonToken, editUserProfile, socialLogin, forgotPassword } = require("../operations/operation");
 
 //Routes
 var contact = require("../routes/contact");
@@ -21,11 +21,31 @@ router.post("/login", function (req, res) {
 });
 
 /**
+ * Social login
+ */
+router.post("/social/login", function (req, res) {
+    common.validate("social_login", req.body, (status, keys) => {
+        if (status) socialLogin(req.body, (status, response) => common.httpResponse(req, res, status, response));
+        else common.httpResponse(req, res, VALIDATE_ERROR, keys);
+    });
+});
+
+/**
  * Signup
  */
 router.post("/signup", function (req, res) {
     common.validate("signup", req.body, (status, keys) => {
         if (status) signup(req.body, (status, response) => common.httpResponse(req, res, status, response));
+        else common.httpResponse(req, res, VALIDATE_ERROR, keys);
+    });
+});
+
+/**
+ * Forgot Password 
+ */
+router.get("/login/:username/forgot/password", function (req, res) {
+    common.validate("forgot_password", req.params, (status, keys) => {
+        if (status) forgotPassword(req.params, (status, response) => common.httpResponse(req, res, status, response));
         else common.httpResponse(req, res, VALIDATE_ERROR, keys);
     });
 });

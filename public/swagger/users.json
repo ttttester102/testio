@@ -12,8 +12,8 @@
     ],
     "info": {
         "version": "0.0.1-oas3",
-        "title": "TestIO",
-        "description": "# Handle the user\n CRUD APIS in TestIO."
+        "title": "Make My Match",
+        "description": "# Handle the user\n CRUD APIS of Make My Match."
     },
     "security": [
         {
@@ -103,7 +103,46 @@
                 ]
             }
         },
-        "/v0/users/login/{email}/forgot": {
+        "/social/login": {
+            "summary": "Create user in database of Users, if user is already there it will provide the token to you.",
+            "description": "If you want access with social media authorization, come here first",
+            "post": {
+                "operationId": "postAuthSocialMedia",
+                "summary": "Get access to 'Make My Match' App creating a User",
+                "description": "In the request body you give social_media_id and social_media_name.\nWe store that data and\nsent you a token code.\nThen you can get enter in app.",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/SocialLogin"
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SocialLogin200"
+                    },
+                    "422": {
+                        "description": "Errors in Validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/ServerError",
+                        "description": "Internal Server Error"
+                    }
+                },
+                "tags": [
+                    "App Authorization"
+                ]
+            }
+        },
+        "/login/{email}/forgot": {
             "summary": "The user forgot the password",
             "description": "the user don't have to provide nothing more than the email",
             "get": {
@@ -129,45 +168,24 @@
                 ]
             }
         },
-        "/v0/users/login/recovery": {
-            "summary": "The user enter the new the password",
-            "description": "the user don't have to provide nothing more than the email",
-            "post": {
-                "deprecated": true,
-                "summary": "Change password with verificationCode",
-                "description": "The user must be capable of change the password by request",
-                "operationId": "postAuthLoginRecovery",
-                "requestBody": {
-                    "$ref": "#/components/requestBodies/Recovery"
-                },
-                "security": [],
-                "responses": {
-                    "201": {
-                        "$ref": "#/components/responses/Ok"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/ServerError"
-                    }
-                },
-                "tags": [
-                    "App Authorization"
-                ]
-            }
-        },
-        "/v0/usres/signup": {
+        "/signup": {
             "summary": "Create user in database of Users",
             "description": "If you want access come here first",
             "post": {
                 "operationId": "postAuthSignup",
-                "summary": "Get access to CookinAt' App creating a User",
-                "description": "In the App you give name, email and password.\nWe store that data, encrypt your password and\nsent you a verification code to your email.\nThen you must visit the next view, Verification, \nand enter the code provided in the email.\nOnly then you can enter the App in LogIn view.\nIf verification step not done the user is not allowed to operate.",
-                "security": [],
+                "summary": "Get access to 'Make My Match' App creating a User",
+                "description": "In the App you give username, email, mobile_number and password.\nWe store that data, encrypt your password and\nsent you a token code.\nThen you can get enter in app.",
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "requestBody": {
                     "$ref": "#/components/requestBodies/Signup"
                 },
                 "responses": {
-                    "201": {
-                        "$ref": "#/components/responses/SignUp201"
+                    "200": {
+                        "$ref": "#/components/responses/SignUp200"
                     },
                     "409": {
                         "$ref": "#/components/responses/Email409"
@@ -177,39 +195,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ClientError"
+                                    "$ref": "#/components/schemas/ValidationError"
                                 }
                             }
                         }
                     },
                     "500": {
+                        "$ref": "#/components/responses/ServerError",
                         "description": "Internal Server Error"
-                    }
-                },
-                "tags": [
-                    "App Authorization"
-                ]
-            }
-        },
-        "/v0/users/signup/verification/resend/{email}": {
-            "summary": "The user can resend the verification code he got in email",
-            "description": "the user don't have to provide nothing more than the email",
-            "get": {
-                "summary": "Verificate your email",
-                "description": "The user must be capable of change the password by request\nAn verification code is sent to your email, that code is\nrequested here.\n\nThe verification code will be a unique 6 alphanumeric",
-                "operationId": "getAuthSignUpVerificationResend",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/Email"
-                    }
-                ],
-                "security": [],
-                "responses": {
-                    "201": {
-                        "$ref": "#/components/responses/Ok"
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/ServerError"
                     }
                 },
                 "tags": [
@@ -259,94 +252,48 @@
             "Signup": {
                 "type": "object",
                 "required": [
-                    "firstName",
-                    "lastName",
+                    "username",
                     "email",
                     "password",
-                    "telephone"
+                    "mobile_number"
                 ],
                 "properties": {
-                    "firstName": {
+                    "username": {
                         "type": "string",
-                        "description": "Names with more than 3 letters",
-                        "example": "John",
-                        "minLength": 3
-                    },
-                    "lastName": {
-                        "type": "string",
-                        "description": "Surnames with more than 3 letters",
-                        "example": "Doe",
-                        "minLength": 3
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "email without spaces and more than 3 letters",
-                        "example": "example@mail.com"
+                        "description": "Unique user name to identify it in app",
+                        "example": "johan"
                     },
                     "password": {
                         "type": "string",
-                        "description": "password with more than 8 and less than 24 alphanumeric symbols",
-                        "example": "password123",
-                        "minLength": 6,
-                        "maxLength": 24
+                        "description": "user password",
+                        "example": "doe"
                     },
-                    "telephone": {
-                        "type": "string"
+                    "email": {
+                        "type": "string",
+                        "description": "email without spaces",
+                        "example": "example@mail.com"
                     },
-                    "avatar": {
-                        "type": "string"
+                    "mobile_number": {
+                        "type": "number",
+                        "description": "mobile number without spaces",
+                        "example": "1234567890"
                     }
                 }
             },
-            "SignupCook": {
+            "SocialLogin": {
                 "type": "object",
                 "required": [
-                    "firstName",
-                    "lastName",
-                    "email",
-                    "password",
-                    "telephone",
-                    "role"
+                    "social_media_name",
+                    "social_media_id"
                 ],
                 "properties": {
-                    "firstName": {
+                    "social_media_name": {
                         "type": "string",
-                        "description": "Names with more than 3 letters",
-                        "example": "John",
-                        "minLength": 3
+                        "example": "John"
                     },
-                    "lastName": {
+                    "social_media_id": {
                         "type": "string",
-                        "description": "Surnames with more than 3 letters",
-                        "example": "Doe",
-                        "minLength": 3
-                    },
-                    "email": {
-                        "type": "string",
-                        "description": "email without spaces and more than 3 letters",
-                        "example": "example@mail.com"
-                    },
-                    "password": {
-                        "type": "string",
-                        "description": "password with more than 8 and less than 24 alphanumeric symbols",
-                        "example": "password123",
-                        "minLength": 6,
-                        "maxLength": 24
-                    },
-                    "telephone": {
-                        "type": "string"
-                    },
-                    "avatar": {
-                        "type": "string"
-                    },
-                    "last4SSN": {
-                        "type": "string"
-                    },
-                    "certificationPhoto": {
-                        "type": "string"
-                    },
-                    "instagram": {
-                        "type": "string"
+                        "example": "1234567890"
                     }
                 }
             },
@@ -667,38 +614,35 @@
             "ClientError": {
                 "type": "object",
                 "properties": {
-                    "success": {
-                        "type": "boolean"
+                    "code": {
+                        "type": "number"
                     },
-                    "msg": {
+                    "status": {
+                        "type": "number"
+                    },
+                    "data": {
+                        "type": "object"
+                    },
+                    "message": {
                         "type": "string"
                     },
-                    "errors": {
-                        "description": "object with valuable data",
+                    "emptyKeys": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "description": "Describe the error",
-                            "properties": {
-                                "msg": {
-                                    "type": "string"
-                                }
-                            }
+                            "type": "object"
                         }
+                    },
+                    "error": {
+                        "type": "boolean"
                     }
                 },
                 "example": {
-                    "sucess": false,
-                    "msg": "Client Sent Incorrect or Incomplete Data",
-                    "errors": [
-                        {
-                            "msg": "error1"
-                        },
-                        {
-                            "msg": "error2"
-                        },
-                        "...otherErrors"
-                    ]
+                    "code": 1,
+                    "status": 409,
+                    "data": {},
+                    "message": "Present",
+                    "emptyKeys": null,
+                    "error": true
                 }
             },
             "Login200": {
@@ -731,56 +675,97 @@
             "User201": {
                 "type": "object",
                 "properties": {
-                    "sucess": {
-                        "type": "boolean"
+                    "status": {
+                        "type": "number"
                     },
-                    "msg": {
-                        "type": "string",
-                        "description": "Explanatory message"
+                    "code": {
+                        "type": "number"
                     },
                     "data": {
                         "type": "object",
-                        "description": "object with valuable data",
                         "properties": {
-                            "id": {
+                            "_id": {
+                                "type": "string",
+                                "description": "Unique id"
+                            },
+                            "username": {
                                 "type": "string"
                             },
                             "email": {
                                 "type": "string"
                             },
-                            "name": {
-                                "type": "string"
+                            "mobile_number": {
+                                "type": "number"
+                            },
+                            "deletedStatus": {
+                                "type": "number"
+                            },
+                            "status": {
+                                "type": "number"
+                            },
+                            "user_token": {
+                                "type": "number",
+                                "description": "Token to access the user data."
                             }
                         }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "error": {
+                        "type": "boolean"
                     }
                 }
             },
-            "Users201": {
+            "SocialLoginUser201": {
                 "type": "object",
                 "properties": {
-                    "sucess": {
-                        "type": "boolean"
+                    "status": {
+                        "type": "number"
                     },
-                    "msg": {
-                        "type": "string",
-                        "description": "Explanatory message"
+                    "code": {
+                        "type": "number"
                     },
                     "data": {
+                        "_id": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "loginType": {
+                            "type": "string"
+                        },
+                        "deletedStatus": {
+                            "type": "number"
+                        },
+                        "status": {
+                            "type": "number"
+                        },
+                        "user_token": {
+                            "type": "string"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "emptyKeys": {
                         "type": "array",
                         "items": {
-                            "type": "object",
-                            "properties": {
-                                "id": {
-                                    "type": "string"
-                                },
-                                "email": {
-                                    "type": "string"
-                                },
-                                "name": {
-                                    "type": "string"
-                                }
-                            }
+                            "type": "object"
                         }
+                    },
+                    "error": {
+                        "type": "boolean"
                     }
                 }
             },
@@ -930,7 +915,10 @@
                         "type": "number"
                     },
                     "data": {
-                        "type": "array"
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        }
                     },
                     "message": {
                         "type": "string"
@@ -943,7 +931,7 @@
                             },
                             "message": {
                                 "type": "array",
-                                "properties": {
+                                "items": {
                                     "fieldName": {
                                         "type": "string"
                                     }
@@ -951,7 +939,9 @@
                             }
                         }
                     },
-                    "error": "boolean"
+                    "error": {
+                        "type": "boolean"
+                    }
                 },
                 "example": {
                     "code": 1,
@@ -1058,18 +1048,18 @@
                     }
                 }
             },
-            "SignupCook": {
+            "SocialLogin": {
                 "description": "User related data needed",
                 "required": true,
                 "content": {
                     "application/x-www-form-urlencoded": {
                         "schema": {
-                            "$ref": "#/components/schemas/SignupCook"
+                            "$ref": "#/components/schemas/SocialLogin"
                         }
                     },
                     "application/json": {
                         "schema": {
-                            "$ref": "#/components/schemas/SignupCook"
+                            "$ref": "#/components/schemas/SocialLogin"
                         }
                     }
                 }
@@ -1293,8 +1283,8 @@
                     }
                 }
             },
-            "SignUp201": {
-                "description": "User Sign Up successfully (email and name inside of data)",
+            "SignUp200": {
+                "description": "User Sign Up successfully (email and username inside of data) and also you can consider youself as logged in user. #In short you got your token.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -1312,12 +1302,12 @@
                     }
                 }
             },
-            "UserCreate201": {
-                "description": "User Created Successfuly",
+            "SocialLogin200": {
+                "description": "User Logged in Successfuly",
                 "content": {
                     "application/json": {
                         "schema": {
-                            "$ref": "#/components/schemas/User201"
+                            "$ref": "#/components/schemas/SocialLoginUser201"
                         }
                     }
                 },

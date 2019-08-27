@@ -37,7 +37,7 @@ module.exports = {
     NOT_CHANGED: "notChanged",
     NO_CHANGE: 'noChange',
     CHANGE: "change",
-    TYPES: ["string", "array", "object", "number", "boolean", "any"],
+    TYPES: ["string", "array", "object", "number", "boolean", "enum", "any"],
     ERROR_TYPE_MISMATCHED: "type_mismatched",
     ERROR_FIELDS_EMPTY: "error_fields_empty",
 

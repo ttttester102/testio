@@ -53,28 +53,30 @@ router.get("/login/:username/forgot/password", function (req, res) {
 /**
  * Get user data
  */
-router.post("/detail", (req, res, next) => {
-    common.validate("detail", req.body, (status, keys) => {
+router.post("/profile", (req, res, next) => {
+    common.validate("profile", req.body, (status, keys) => {
         if (status) next();
         else common.httpResponse(req, res, VALIDATE_ERROR, keys);
     });
 }, verifyJsonToken, (req, res, next) => {
-    res.json({
-        message: req[AUTH_USER_DATA]
-    })
+    common.httpResponse(req, res, SUCCESS, req[AUTH_USER_DATA]);
 });
 
 /**
  * Edit profile
  */
-router.post("/editprofile", (req, res, next) => {
+router.put("/profile", (req, res, next) => {
     common.validate("editprofile", req.body, (status, keys) => {
+        console.log("status ===> ", status, keys);
         if (status) next();
         else common.httpResponse(req, res, VALIDATE_ERROR, keys);
     });
 }, verifyJsonToken, (req, res) => {
     req.body._id = req[AUTH_USER_DATA] && req[AUTH_USER_DATA]._id ? req[AUTH_USER_DATA]._id : null;
-    editUserProfile(req.body, (status, response) => common.httpResponse(req, res, status, response));
+    res.json({
+        data: req.body
+    })
+    // editUserProfile(req.body, (status, response) => common.httpResponse(req, res, status, response));
 });
 
 /* Convert csv file to json */

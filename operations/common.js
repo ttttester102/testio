@@ -43,6 +43,8 @@ var {
 } = require('./constant');
 
 var isObjectEmpty = function (obj, cb = undefined) {
+    if (!cb && !obj) return true;
+
     let names = Object.getOwnPropertyNames(obj);
     cb && cb((names.length === 0) ? true : false, names);
 
@@ -503,6 +505,8 @@ var isTypeMatched = function (ele, value) {
     if (!value && value !== 0 && typeof value !== undefined && value !== null) return false;
 
     switch (ele.type.toLowerCase()) {
+        case "enum":
+            return (ele.data.findIndex(ele => ele === value) !== -1 || value === undefined || value === null) ? true : false;
         case "string":
             return (typeof value === "string" || value === undefined || value === null) ? true : false;
         case "number":
@@ -546,15 +550,16 @@ var validate = function (key, obj, cb) {
                 if (misMatchedValues && misMatchedValues.length) {
                     cb(false, {
                         error: ERROR_TYPE_MISMATCHED,
-                        message: misMatchedValues.map(ele => ({
+                        message: misMatchedValues.map(ele => (Object.assign({
                             fieldName: ele.key,
                             type: ele.type
-                        }))
+                        }, ele.type ? { data: ele.data } : {})))
                     });
                     return;
                 }
                 apiKeys.routesFields[key].forEach((element, index) => {
                     switch (element.type.toLowerCase()) {
+                        case "enum":
                         case "string":
                             !obj[element.key] && element.isRequired && existedFields.emptyKeys.push({ fieldName: element.key, message: element.key + " field is empty" });
                             break;

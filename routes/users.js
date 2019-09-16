@@ -67,16 +67,12 @@ router.post("/profile", (req, res, next) => {
  */
 router.put("/profile", (req, res, next) => {
     common.validate("editprofile", req.body, (status, keys) => {
-        console.log("status ===> ", status, keys);
         if (status) next();
         else common.httpResponse(req, res, VALIDATE_ERROR, keys);
     });
 }, verifyJsonToken, (req, res) => {
     req.body._id = req[AUTH_USER_DATA] && req[AUTH_USER_DATA]._id ? req[AUTH_USER_DATA]._id : null;
-    res.json({
-        data: req.body
-    })
-    // editUserProfile(req.body, (status, response) => common.httpResponse(req, res, status, response));
+    editUserProfile(req.body, (status, response) => common.httpResponse(req, res, status, response));
 });
 
 /* Convert csv file to json */

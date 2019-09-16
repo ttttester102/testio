@@ -50,5 +50,7 @@ module.exports = {
     ACCEPCT_CONTACT_RESPONSE: 1,
     DECLINE_CONTACT_RESPONSE: 2,
 
-    SOCIAL_MEDIA_LOGIN: "social_media_login"
+    SOCIAL_MEDIA_LOGIN: "social_media_login",
+
+    APP_SEARCH_RADIUS: 40
 } 

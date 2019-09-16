@@ -6,7 +6,8 @@ var {
     PRESENT,
     AUTH_USER_DATA,
     NOT_AUTHORIZED,
-    SOCIAL_MEDIA_LOGIN
+    SOCIAL_MEDIA_LOGIN,
+    APP_SEARCH_RADIUS
 } = require("./constant");
 var {
     ObjectID,
@@ -193,7 +194,7 @@ var forgotPassword = (obj, cb) => {
                 else if (data && data.length !== 0) {
                     const user = data[0];
 
-                    if(user && user.email) {
+                    if (user && user.email) {
                         close(client, SUCCESS, data[0], cb);
                     } else close(client, NOVALUE, {
                         message: "User email is not present."
@@ -239,21 +240,92 @@ var editUserProfile = (obj, cb) => {
         if (err) close(client, ERROR, err, cb);
         else {
             var collection = db.collection('users');
-            const { _id, mobile_number, social_media_name, about_me, hair_color, eye_color, occupation, what_he_is_looking_for, relationship_status, isPrivate, profile_image_url } = obj;
+            const { _id, mobile_number, social_media_name, about_me, hair_color, eye_color, occupation, what_he_is_looking_for, relationship_status, isPrivate, profile_image_url, ethniicty, body_type, education, children, smokes, drinks, location, looking_for, lifestyle_expectation, height } = obj;
             collection.updateOne({ _id: new ObjectId(_id) }, {
                 $set: {
-                    mobile_number: mobile_number,
-                    social_media_name: social_media_name,
-                    about_me: about_me,
-                    hair_color: hair_color,
-                    eye_color: eye_color,
-                    occupation: occupation,
-                    what_he_is_looking_for: what_he_is_looking_for,
-                    relationship_status: relationship_status,
-                    isPrivate: isPrivate,
-                    profile_image_url: profile_image_url
+                    mobile_number,
+                    social_media_name,
+                    about_me,
+                    hair_color,
+                    eye_color,
+                    occupation,
+                    what_he_is_looking_for,
+                    relationship_status,
+                    isPrivate,
+                    profile_image_url,
+                    ethniicty,
+                    body_type,
+                    education,
+                    children,
+                    smokes,
+                    drinks,
+                    location,
+                    looking_for,
+                    lifestyle_expectation,
+                    height
                 }
             }).then((data) => {
+                if (!data) close(client, ERROR, err, cb);
+                else getCollection(collection, { _id: new ObjectId(_id) }, { password: 0, slug: 0 }, client, cb);
+            });
+        }
+    })
+}
+
+/** 
+ *  Search near by users
+ */
+var search = (obj, cb) => {
+    connection((err, db, client) => {
+        if (err) close(client, ERROR, err, cb);
+        else {
+            var collection = db.collection('users');
+            const { latitude, longitude, name, email, radius, page, page_size } = obj;
+            let _radius = radius ? radius : APP_SEARCH_RADIUS;
+
+            collection.aggregate([
+                {
+                    $geoNear: {
+                        near: { type: "Point", coordinates: [longitude, latitude] },
+                        distanceField: "distance",
+                        distanceMultiplier: 0.001
+                    }
+                },
+                {
+                    $match: {
+                        $expr: {
+                            $and: [
+                                { $lte: ["$distance", _radius] },
+                                name && email ?
+                                    {
+                                        $or: [
+                                            { $ne: [{ $indexOfCP: ["$username", name ? name : ''] }, -1] },
+                                            { $ne: [{ $indexOfCP: ["$email", email ? email : ''] }, -1] }
+                                        ]
+                                    } : {}
+                            ]
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        "distance": 1,
+                        "username": 1,
+                        "email": 1,
+                        "indexdata": {
+
+                            $cond: {
+
+                                if: { $ne: [{ $indexOfCP: ["$username", name ? name : ''] }, -1] }, then: { $indexOfCP: ["$username", name ? name : ''] }, else: { $indexOfCP: ["$email", email ? email : ''] }
+
+                            }
+
+                        }
+                    }
+                },
+                { $skip: page * page_size },
+                { $limit: page_size }
+            ]).then((data) => {
                 if (!data) close(client, ERROR, err, cb);
                 else getCollection(collection, { _id: new ObjectId(_id) }, { password: 0, slug: 0 }, client, cb);
             });
@@ -269,6 +341,57 @@ module.exports = {
     signup,
     getCollection,
     verifyJsonToken,
-    editUserProfile, 
-    forgotPassword
+    editUserProfile,
+    forgotPassword,
+    searchValue
 }
+
+
+
+
+
+
+
+//Search api query
+// db.getCollection('users').aggregate([
+//     {
+//         $geoNear: {
+//             near: { type: "Point", coordinates: [76.7179, 30.7046] },
+//             distanceField: "distance",
+//             distanceMultiplier: 0.001
+//         }
+//     },
+//     {
+//         $match: {
+//             $expr: {
+//                 $and: [
+//                     { $lte: ["$distance", 40] },
+//                     {
+//                         $or: [
+//                             { $ne: [{ $indexOfCP: ["$username", "gmail"] }, -1] },
+//                             { $ne: [{ $indexOfCP: ["$email", "gmail"] }, -1] }
+//                         ]
+//                     }
+//                 ]
+//             }
+//         }
+//     },
+//     {
+//         $project: {
+//             "distance": 1,
+//             "username": 1,
+//             "email": 1,
+//             "indexdata": {
+
+//                 $cond: {
+
+//                     if: { $ne: [{ $indexOfCP: ["$username", "gmail"] }, -1] }, then: { $indexOfCP: ["$username", "gmail"] }, else: { $indexOfCP: ["$email", "gmail"] }
+
+//                 }
+
+//             }
+//         }
+//     },
+//     { $skip: 0 },
+//     { $limit: 12 }
+// ]);

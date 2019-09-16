@@ -114,7 +114,7 @@ var editUsersData = (req, res, next) => {
             csvJsonData[index].isPrivate = isPrivate;
             csvJsonData[index].location = {
                 type: "Point",
-                coordinates: [latitude, longitude]
+                coordinates: [parseFloat(longitude), parseFloat(latitude)]
             };
             csvJsonData[index].profile_image_url = "profile_image_url";
         }

@@ -8,6 +8,7 @@ var {
 var {
     ERROR,
     SUCCESS,
+    PRESENT,
     NOVALUE,
     ACCEPCT_CONTACT_RESPONSE,
     DECLINE_CONTACT_RESPONSE
@@ -28,20 +29,30 @@ var requestUser = (obj, cb) => {
             var collection = db.collection('users_request');
             var { _id, user_id } = obj;
 
-            collection.insertOne({
-                userId: _id,
-                requestedId: user_id,
-                deletedStatus: 0,
-                status: 0,
-                createdTime: new Date().getTime(),
-                updatedTime: new Date().getTime()
-            }, (err, data) => {
+            collection.find({
+                userId: new ObjectId(_id),
+                requestedId: new ObjectId(user_id)
+            }).toArray((err, data) => {
                 if (err) close(client, ERROR, err, cb);
-                else {
-                    close(client, SUCCESS, {
-                        message: "Request sent successfully."
-                    }, cb);
-                }
+                else if (data && data.length === 0) {
+                    collection.insertOne({
+                        userId: new ObjectId(_id),
+                        requestedId: new ObjectId(user_id),
+                        deletedStatus: 0,
+                        status: 0,
+                        createdAt: new Date().getTime(),
+                        updatedAt: new Date().getTime()
+                    }, (err, data) => {
+                        if (err) close(client, ERROR, err, cb);
+                        else {
+                            close(client, SUCCESS, {
+                                message: "Request sent successfully."
+                            }, cb);
+                        }
+                    });
+                } else close(client, PRESENT, {
+                    message: "Reuqest is already present."
+                }, cb);
             });
         }
     });
@@ -62,19 +73,19 @@ var responseUser = (obj, cb) => {
             collection.updateOne({ _id: new ObjectId(requestId) }, {
                 $set: {
                     status: requestStatus ? ACCEPCT_CONTACT_RESPONSE : DECLINE_CONTACT_RESPONSE,
-                    updatedTime: new Date().getTime()
+                    updatedAt: new Date().getTime()
                 }
             }, (err, value) => {
                 if (err) close(client, ERROR, err, cb);
                 else {
-                    const { data } = value;
+                    const { result: data } = value;
                     if (data && data.n) {
                         close(client, SUCCESS, {
-                            status: data && data.nModified > 1 ? "Changed" : "Not Changed",
+                            status: data && data.nModified >= 1 ? "Changed" : "Not Changed",
                             data: value,
-                            message: requestStatus ? "Request accepted successfully." : "Request declined successfully."
+                            message: requestStatus === ACCEPCT_CONTACT_RESPONSE ? "Request accepted successfully." : "Request declined successfully."
                         }, cb);
-                    }else close(client, SUCCESS, {
+                    } else close(client, SUCCESS, {
                         data: value.data,
                         message: "No value found."
                     }, cb);

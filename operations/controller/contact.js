@@ -11,7 +11,8 @@ var {
     PRESENT,
     NOVALUE,
     ACCEPCT_CONTACT_RESPONSE,
-    DECLINE_CONTACT_RESPONSE
+    DECLINE_CONTACT_RESPONSE,
+    DEFAULT_CONTACT_RESPONSE
 } = require('../constant');
 
 var jwt = require("jsonwebtoken");
@@ -59,6 +60,53 @@ var requestUser = (obj, cb) => {
 }
 
 /**
+ * Get all request list
+ * @param {* object} obj 
+ * @param {* function} cb 
+ */
+var getRequestList = (obj, cb) => {
+    connection((err, db, client) => {
+        if (err) close(client, ERROR, err, cb);
+        else {
+            var collection = db.collection('users_request');
+            var { _id, page, page_size } = obj;
+
+            collection.aggregate([
+                {
+                    $match: {
+                        $expr: {
+                            $and: [
+                                {
+                                    $eq: ["$requestedId", new ObjectId(_id)]
+                                },
+                                {
+                                    $eq: ["$status", DEFAULT_CONTACT_RESPONSE]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $skip: page === 1 ? 0 : page * page_size
+                },
+                {
+                    $limit: page_size
+                }
+            ], (err, data) => {
+                if (err) close(client, ERROR, err, cb);
+                else data.toArray((err, data) => {
+                    if (err) close(client, ERROR, err, cb);
+                    else close(client, SUCCESS, {
+                        page,
+                        results: data
+                    }, cb);
+                });
+            });
+        }
+    });
+}
+
+/**
  * Response user
  * @param {* object} obj 
  * @param {* function} cb 
@@ -95,7 +143,43 @@ var responseUser = (obj, cb) => {
     });
 }
 
+/**
+ * Get user match
+ * @param {* object} obj 
+ * @param {* function} cb 
+ */
+var getMatch = (obj, cb) => {
+    connection((err, db, client) => {
+        if (err) close(client, ERROR, err, cb);
+        else {
+            var collection = db.collection('users');
+            var { _id, user_id } = obj;
+
+            collection.aggregate([
+                {
+                    $match: {
+                        $expr: {
+                            $and: [
+                                {
+                                    $eq: ["$_id", new ObjectId(_id)]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ], (err, data) => {
+                if (err) close(client, ERROR, err, cb);
+                else data.toArray((err, data) => {
+                    if (err) close(client, ERROR, err, cb);
+                    else close(client, SUCCESS, data, cb);
+                });
+            });
+        }
+    });
+}
 module.exports = {
     requestUser,
-    responseUser
+    responseUser,
+    getRequestList,
+    getMatch
 }

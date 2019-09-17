@@ -49,6 +49,7 @@ module.exports = {
 
     ACCEPCT_CONTACT_RESPONSE: 1,
     DECLINE_CONTACT_RESPONSE: 2,
+    DEFAULT_CONTACT_RESPONSE: 1,
 
     SOCIAL_MEDIA_LOGIN: "social_media_login",
 

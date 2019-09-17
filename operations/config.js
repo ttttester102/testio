@@ -209,6 +209,18 @@ module.exports = {
                 type: "number"
             }
         ],
+        match: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_id",
+                isRequired: true,
+                type: "string"
+            }
+        ],
         request: [
             {
                 key: "user_token",
@@ -219,6 +231,23 @@ module.exports = {
                 key: "user_id",
                 isRequired: true,
                 type: "string"
+            }
+        ],
+        request_list: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "page",
+                isRequired: true,
+                type: "number"
+            },
+            {
+                key: "page_size",
+                isRequired: true,
+                type: "number"
             }
         ],
         response: [

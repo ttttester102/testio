@@ -323,11 +323,17 @@ var search = (obj, cb) => {
                         }
                     }
                 },
-                { $skip: page * page_size },
+                { $skip: page === 1 ? 0 : page * page_size },
                 { $limit: page_size }
-            ]).then((data) => {
-                if (!data) close(client, ERROR, err, cb);
-                else getCollection(collection, { _id: new ObjectId(_id) }, { password: 0, slug: 0 }, client, cb);
+            ], (err, data) => {
+                if (err) close(client, ERROR, err, cb);
+                else data.toArray((err, data) => {
+                    if (err) close(client, ERROR, err, cb);
+                    else close(client, SUCCESS, {
+                        page,
+                        results: data
+                    }, cb);
+                });
             });
         }
     })
@@ -343,7 +349,7 @@ module.exports = {
     verifyJsonToken,
     editUserProfile,
     forgotPassword,
-    searchValue
+    search
 }
 
 
@@ -394,4 +400,28 @@ module.exports = {
 //     },
 //     { $skip: 0 },
 //     { $limit: 12 }
+// ]);
+
+//Get all requests
+// db.getCollection('users_request').aggregate([
+//     { 
+//         $match: {
+//             $expr: {
+//                 $and: [
+//                     {
+//                         $eq: ["$requestedId", ObjectId("5d788ddc23e70382f97f95dd")]
+//                     },
+//                     {
+//                         $eq: ["$status", 0]
+//                     }
+//                 ]
+//             }
+//         }
+//     },
+//     { 
+//         $skip: 0
+//     },
+//     { 
+//         $limit: 1
+//     }
 // ]);

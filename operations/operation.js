@@ -180,6 +180,25 @@ var verifyJsonToken = (req, res, next) => {
     });
 }
 
+/** Verify json token with socket */
+var verifyJsonTokenWithSocket = (data, cb) => {
+    const { user_token } = data;
+
+    const { payload } = jwt.decode(user_token, {
+        complete: true
+    });
+
+    getUserViaId(payload, (status, response) => {
+        if (status === SUCCESS) {
+            const { userAccessToken, ...rest } = response;
+            jwt.verify(user_token, userAccessToken, (err, decoded) => {
+                if (err) cb(ERROR, err);
+                else cb(SUCCESS, decoded);
+            });
+        } else common.httpResponse(req, res, NOVALUE, response);
+    });
+}
+
 /** 
  * Forgot password
  */
@@ -349,7 +368,8 @@ module.exports = {
     verifyJsonToken,
     editUserProfile,
     forgotPassword,
-    search
+    search,
+    verifyJsonTokenWithSocket
 }
 
 
@@ -423,5 +443,46 @@ module.exports = {
 //     },
 //     { 
 //         $limit: 1
+//     }
+// ]);
+
+// Get match value
+// db.getCollection('users').aggregate([
+//     { 
+//         $match: { 
+//              $expr: { 
+//                 $or: [
+//                     { $eq: ["$_id", ObjectId("5d788ddc23e70382f97f95d6")] },
+//                     { $eq: ["$_id", ObjectId("5d788ddc23e70382f97f95e8")] }
+//                 ]
+//              }
+//         }
+//     },
+//     {
+//         $group: {
+//             "_id": 1,
+//             "user": { $first: "$$ROOT" },
+//             "requestedUser": { $last: "$$ROOT" }
+//         }
+//     },
+//     {
+//         $project: {
+//             "_id": 1,
+//             "user": 1,
+//             "requestedUser": 1,
+//             "lifestyle_expectation": { $setUnion: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] },
+//             "matched_lifestyle_expectation": { $setIntersection: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] },
+//             "match": { 
+//                 $multiply: [ 
+//                    {
+//                        $divide: [
+//                        { $size: { $setIntersection: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] } }, 
+//                        { $size: { $setUnion: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] } }
+//                         ]
+//                     }
+//                     , 100 
+//                 ] 
+//             }
+//         }
 //     }
 // ]);

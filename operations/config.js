@@ -267,6 +267,79 @@ module.exports = {
                 type: "enum",
                 data: [ACCEPCT_CONTACT_RESPONSE, DECLINE_CONTACT_RESPONSE]
             }
-        ]
+        ],
+        connect_user: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_id",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_socket_id",
+                isRequired: true,
+                type: "string"
+            }
+        ],
+        disconnect_user: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_id",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_socket_id",
+                isRequired: true,
+                type: "string"
+            }
+        ],
+        get_socket_list: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "page",
+                isRequired: true,
+                type: "number"
+            },
+            {
+                key: "page_size",
+                isRequired: true,
+                type: "number"
+            }
+        ],
+        save_user_message: [
+            {
+                key: "user_token",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "user_id",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "peer_user_id",
+                isRequired: true,
+                type: "string"
+            },
+            {
+                key: "message",
+                isRequired: true,
+                type: "string"
+            }
+        ],
     }
 }

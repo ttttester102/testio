@@ -53,5 +53,11 @@ module.exports = {
 
     SOCIAL_MEDIA_LOGIN: "social_media_login",
 
-    APP_SEARCH_RADIUS: 40
+    APP_SEARCH_RADIUS: 40,
+
+    CONNECTED: 1, 
+    DISCONNECTED: 2,
+
+    ACTIVE: 1,
+    DELETED: 2
 } 

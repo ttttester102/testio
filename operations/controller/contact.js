@@ -155,14 +155,42 @@ var getMatch = (obj, cb) => {
             var collection = db.collection('users');
             var { _id, user_id } = obj;
 
+            console.log("_id ===> ", _id, user_id);
+
             collection.aggregate([
                 {
                     $match: {
                         $expr: {
-                            $and: [
+                            $or: [
+                                { $eq: ["$_id", new ObjectId(_id)] },
+                                { $eq: ["$_id", new ObjectId(user_id)] }
+                            ]
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        "_id": 1,
+                        "user": { $first: "$$ROOT" },
+                        "requestedUser": { $last: "$$ROOT" }
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+                        "user": 1,
+                        "requestedUser": 1,
+                        "lifestyle_expectation": { $setUnion: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] },
+                        "matched_lifestyle_expectation": { $setIntersection: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] },
+                        "match": {
+                            $multiply: [
                                 {
-                                    $eq: ["$_id", new ObjectId(_id)]
+                                    $divide: [
+                                        { $size: { $setIntersection: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] } },
+                                        { $size: { $setUnion: ["$user.lifestyle_expectation", "$requestedUser.lifestyle_expectation"] } }
+                                    ]
                                 }
+                                , 100
                             ]
                         }
                     }

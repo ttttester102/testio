@@ -372,7 +372,7 @@ var httpResponse = function (req, res, status, response) {
 }
 
 /**
- * Civic response while operation has done
+ * Make my match response while operation has done
  * @param {*string} status 
  * @param {*array|object} response 
  */
@@ -387,41 +387,68 @@ var socketResponse = function (status, response) {
                 emptyKeys: null,
                 error: false
             };
-        case 'err':
+        case 'successWithEmailChange':
             return {
-                status: 400,
+                status: 200,
                 code: 1,
-                data: [],
-                message: "Error",
+                data: response,
+                message: "SuccessWithEmailChange",
                 emptyKeys: null,
                 error: false
+            };
+        case 'err':
+            return {
+                status: 501,
+                code: 1,
+                data: response,
+                message: "Error",
+                emptyKeys: null,
+                error: true
             };
         case 'notValid':
             return {
                 code: 1,
                 status: 401,
-                data: [],
+                data: response,
                 message: "NotValid",
                 emptyKeys: null,
-                error: false
+                error: true
+            };
+        case 'notChanged':
+            return {
+                code: 1,
+                status: 404,
+                data: response,
+                message: "NotValid",
+                emptyKeys: null,
+                error: true
             };
         case 'present':
             return {
                 code: 1,
-                status: 400,
+                status: 409,
                 data: response,
                 message: "Present",
                 emptyKeys: null,
-                error: false
+                error: true
             };
         case 'noValue':
             return {
                 code: 1,
-                status: 400,
+                status: 404,
                 data: response,
                 message: "NoValue",
                 emptyKeys: null,
-                error: false
+                error: true
+            };
+        case 'notAuthorized':
+            return {
+                code: 1,
+                status: 401,
+                data: response,
+                message: "Not Authorized",
+                emptyKeys: null,
+                error: true
             };
         case 'objEmpty':
             return {
@@ -430,32 +457,68 @@ var socketResponse = function (status, response) {
                 data: [],
                 message: "ObjEmpty",
                 emptyKeys: null,
-                error: false
+                error: true
+            };
+        case 'badRequest':
+            return {
+                code: 1,
+                status: 400,
+                data: response,
+                message: "Bad REQUEST",
+                emptyKeys: null,
+                error: true
             };
         case "validationErr":
             return {
                 code: 1,
-                status: 400,
+                status: 422,
                 data: [],
                 message: "ValidationError",
                 emptyKeys: response,
-                error: false
+                error: true
             };
         case "verificationErr":
             return {
                 code: 1,
-                status: 401,
+                status: 304,
                 data: [],
                 message: "VarificationError",
                 emptyKeys: response,
-                error: false
+                error: true
             };
         case "emailPresent":
             return {
                 code: 1,
-                status: 200,
+                status: 409,
                 data: response,
                 message: "EmailPresent",
+                emptyKeys: [],
+                error: true
+            };
+        case "forbidden":
+            return {
+                code: 1,
+                status: 409,
+                data: response,
+                message: "FORBIDDEN",
+                emptyKeys: [],
+                error: true
+            };
+        case "logedIn":
+            return {
+                code: 1,
+                status: 200,
+                data: response,
+                message: "LogedIn",
+                emptyKeys: [],
+                error: false
+            };
+        case "logedOut":
+            return {
+                code: 1,
+                status: 200,
+                data: response,
+                message: "LogedOut",
                 emptyKeys: [],
                 error: false
             };
@@ -466,7 +529,7 @@ var socketResponse = function (status, response) {
                 data: [],
                 message: "InternalServerError",
                 emptyKeys: null,
-                error: false
+                error: true
             };
     }
 }
